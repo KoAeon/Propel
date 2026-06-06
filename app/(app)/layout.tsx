@@ -1,6 +1,7 @@
 'use client'
 import { useRef, useEffect } from 'react'
 import { usePathname } from 'next/navigation'
+import { SessionProvider } from 'next-auth/react'
 import { AppProvider, useApp } from '@/context/AppContext'
 import { StatusBar } from '@/components/layout/StatusBar'
 import { BottomNav } from '@/components/layout/BottomNav'
@@ -79,6 +80,7 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   return (
+    <SessionProvider>
     <AppProvider>
       {/* Phone frame on desktop, full-screen on mobile */}
       <div style={{
@@ -110,5 +112,6 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         </div>
       </div>
     </AppProvider>
+    </SessionProvider>
   )
 }

@@ -3,6 +3,7 @@ import { useApp } from '@/context/AppContext'
 import { Card } from '@/components/ui/Card'
 import { Ring } from '@/components/ui/Ring'
 import { Avatar } from '@/components/ui/Avatar'
+import { GoogleCalendarConnect } from '@/components/GoogleCalendarConnect'
 import { T } from '@/lib/theme'
 
 const FONT_DISPLAY = "'Space Grotesk', 'Manrope', system-ui, sans-serif"
@@ -22,7 +23,7 @@ export default function You() {
         </div>
       </div>
 
-      {/* Profile card */}
+      {/* Profile */}
       <Card pad={18} radius={22} glow style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 16 }}>
         <Avatar initial="R" size={56} />
         <div>
@@ -33,27 +34,11 @@ export default function You() {
         </div>
       </Card>
 
-      {/* Connected services */}
+      {/* Google Calendar — live integration */}
       <div style={{ fontFamily: FONT_DISPLAY, fontSize: 17, fontWeight: 700, color: T.text, letterSpacing: -.3, margin: '22px 2px 12px' }}>
-        Connected
+        Integrations
       </div>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 9 }}>
-        {[
-          { glyph: '📧', name: 'Gmail', detail: 'rich@gmail.com' },
-          { glyph: '📅', name: 'Google Calendar', detail: 'Syncing reminders & tasks' },
-        ].map(c => (
-          <Card key={c.name} pad={14} radius={16} style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <div style={{ width: 38, height: 38, borderRadius: 11, background: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18 }}>
-              {c.glyph}
-            </div>
-            <div style={{ flex: 1 }}>
-              <div style={{ fontSize: 14, fontWeight: 700, color: T.text }}>{c.name}</div>
-              <div style={{ fontSize: 12, color: T.dim }}>{c.detail}</div>
-            </div>
-            <span style={{ fontSize: 11, fontWeight: 700, color: T.good }}>Connected</span>
-          </Card>
-        ))}
-      </div>
+      <GoogleCalendarConnect />
 
       {/* Vision */}
       <div style={{ fontFamily: FONT_DISPLAY, fontSize: 17, fontWeight: 700, color: T.text, letterSpacing: -.3, margin: '22px 2px 12px' }}>
@@ -69,7 +54,7 @@ export default function You() {
         </div>
       </Card>
 
-      {/* Birthdays */}
+      {/* Important dates */}
       <div style={{ fontFamily: FONT_DISPLAY, fontSize: 17, fontWeight: 700, color: T.text, letterSpacing: -.3, margin: '22px 2px 12px' }}>
         Important Dates
       </div>

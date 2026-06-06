@@ -23,3 +23,7 @@ input::placeholder { color: rgba(238,240,251,.32); }
   from { transform: translateY(40px); opacity: .6; }
   to { transform: translateY(0); opacity: 1; }
 }
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
