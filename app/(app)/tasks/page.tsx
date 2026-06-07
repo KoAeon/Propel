@@ -13,6 +13,11 @@ import type { TaskStatus } from '@/lib/types'
 const FONT_DISPLAY = "'Space Grotesk', 'Manrope', system-ui, sans-serif"
 const PRIORITY_COLOR: Record<string, string> = { High: T.a3, Med: T.a1, Low: T.dim }
 
+function formatTime(t: string) {
+  const [h, m] = t.split(':').map(Number)
+  return `${h % 12 || 12}:${String(m).padStart(2, '0')} ${h < 12 ? 'am' : 'pm'}`
+}
+
 export default function Tasks() {
   const router = useRouter()
   const { tasks, projects, setStatus, openSheet, deleteTask } = useApp()
@@ -53,7 +58,7 @@ export default function Tasks() {
                       {t.title}
                     </div>
                     <div style={{ fontSize: 12, color: T.dim, marginTop: 3 }}>
-                      {t.due && <span>Due {formatDue(t.due)} · </span>}
+                      {t.due && <span>Due {formatDue(t.due)}{t.time ? ` · ${formatTime(t.time)}` : ''} · </span>}
                       <span style={{ color: PRIORITY_COLOR[t.priority], fontWeight: 700 }}>{t.priority}</span>
                       {project && <span> · <span style={{ color: T.a2 }}>{project.title}</span></span>}
                     </div>

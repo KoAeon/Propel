@@ -31,10 +31,10 @@ export function projectFromDb(row: Record<string, unknown>): Project {
 }
 
 export function taskToDb(t: Task, userId: string) {
-  return { id: t.id, user_id: userId, title: t.title, description: t.desc, status: t.status, due: t.due ?? null, priority: t.priority, pillar: t.pillar, project_id: t.projectId ?? null, subs: t.subs }
+  return { id: t.id, user_id: userId, title: t.title, description: t.desc, status: t.status, due: t.due ?? null, time: t.time ?? null, priority: t.priority, pillar: t.pillar, project_id: t.projectId ?? null, subs: t.subs }
 }
 export function taskFromDb(row: Record<string, unknown>): Task {
-  return { id: row.id as string, title: row.title as string, desc: row.description as string, status: row.status as Task['status'], due: row.due as string, priority: row.priority as Task['priority'], pillar: row.pillar as string, projectId: row.project_id as string | undefined, subs: row.subs as Task['subs'] }
+  return { id: row.id as string, title: row.title as string, desc: row.description as string, status: row.status as Task['status'], due: row.due as string, time: row.time as string | undefined, priority: row.priority as Task['priority'], pillar: row.pillar as string, projectId: row.project_id as string | undefined, subs: row.subs as Task['subs'] }
 }
 
 export function personToDb(p: Person, userId: string) {

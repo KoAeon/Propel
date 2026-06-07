@@ -18,14 +18,31 @@ export default function Home() {
   const { habits, reminders, toggleHabit } = useApp()
 
   const doneCount = habits.filter(h => h.done).length
-  const pct = Math.round((doneCount / habits.length) * 100)
+  const pct = habits.length ? Math.round((doneCount / habits.length) * 100) : 0
   const next = reminders[0]
-  const bestStreak = Math.max(...habits.map(h => h.streak))
+  const bestStreak = habits.length ? Math.max(...habits.map(h => h.streak)) : 0
 
-  const days = [
-    ['M', 1], ['T', 1], ['W', 1], ['T', 0.5],
-    ['F', doneCount >= 4 ? 1 : -2], ['S', -1], ['S', 0],
-  ] as [string, number][]
+  const today = new Date()
+  const dayLabel = today.toLocaleDateString('en-AU', { weekday: 'long' })
+  const dateLabel = today.toLocaleDateString('en-AU', { day: 'numeric', month: 'long' })
+
+  // Build Mon–Sun week slots, estimating past-day counts from streaks
+  const todayDow = today.getDay() // 0=Sun,1=Mon...6=Sat
+  const daysFromMon = todayDow === 0 ? 6 : todayDow - 1 // Mon=0, Tue=1,...Sun=6
+  const WEEK_LABELS = ['M', 'T', 'W', 'T', 'F', 'S', 'S']
+  const days = WEEK_LABELS.map((label, i) => {
+    const daysAgo = daysFromMon - i  // positive=past, 0=today, negative=future
+    const isToday = daysAgo === 0
+    const isFuture = daysAgo < 0
+    let count: number | null = null
+    if (isToday) {
+      count = doneCount
+    } else if (!isFuture) {
+      // habits whose streak covers this past day (streak > daysAgo means done today and all days since)
+      count = habits.filter(h => h.done && h.streak > daysAgo).length
+    }
+    return { label, count, isToday, isFuture }
+  })
 
   return (
     <div>
@@ -41,7 +58,7 @@ export default function Home() {
       {/* Greeting */}
       <div style={{ marginBottom: 16 }}>
         <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1.3, textTransform: 'uppercase', color: T.dim }}>
-          Saturday, June 6
+          {dayLabel}, {dateLabel}
         </div>
         <div style={{ fontFamily: FONT_DISPLAY, fontSize: 30, fontWeight: 700, letterSpacing: -.8, color: T.text, marginTop: 4 }}>
           Hey, <span style={{ background: T.grad, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Rich</span> 👋
@@ -69,20 +86,21 @@ export default function Home() {
             </div>
           </Ring>
         </div>
-        {/* Week dots */}
+        {/* Week completion numbers */}
         <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 18 }}>
-          {days.map(([d, v], i) => (
+          {days.map(({ label, count, isToday, isFuture }, i) => (
             <div key={i} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 7 }}>
-              <span style={{ fontSize: 10.5, fontWeight: 700, color: T.faint }}>{d}</span>
+              <span style={{ fontSize: 10.5, fontWeight: 700, color: isToday ? T.a1 : T.faint }}>{label}</span>
               <div style={{
                 width: 30, height: 30, borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center',
-                background: v === 1 ? T.grad : v === 0.5 ? T.surface2 : 'transparent',
-                border: v <= 0 ? `1px dashed ${T.border}` : v === 0.5 ? `1px solid ${T.border}` : 'none',
-                boxShadow: v === 1 ? T.glow : 'none',
+                background: isToday ? T.grad : count !== null && count > 0 ? T.surface2 : 'transparent',
+                border: isToday ? 'none' : `1px ${isFuture ? 'dashed' : 'solid'} ${T.border}`,
+                boxShadow: isToday ? T.glow : 'none',
               }}>
-                {v === 1 && <Icon name="check" size={14} color="#fff" sw={2.6} />}
-                {v === 0.5 && <span style={{ color: T.dim, fontSize: 13 }}>~</span>}
-                {v === -1 && <span style={{ width: 4, height: 4, borderRadius: 2, background: T.faint }} />}
+                {isFuture
+                  ? <span style={{ width: 4, height: 4, borderRadius: 2, background: T.faint, display: 'block' }} />
+                  : <span style={{ fontSize: 11, fontWeight: 700, color: isToday ? '#fff' : T.dim }}>{count ?? 0}</span>
+                }
               </div>
             </div>
           ))}

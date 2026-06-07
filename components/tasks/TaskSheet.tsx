@@ -29,6 +29,7 @@ export function TaskSheet({ editId, projectId }: Props) {
   const [priority, setPriority] = useState<TaskPriority>(existing?.priority ?? 'Med')
   const [pillar, setPillar] = useState(existing?.pillar ?? '')
   const [projId, setProjId] = useState(existing?.projectId ?? projectId ?? '')
+  const [time, setTime] = useState(existing?.time ?? '')
   const [addToReminders, setAddToReminders] = useState(false)
   const [reminderTime, setReminderTime] = useState('')
 
@@ -50,7 +51,7 @@ export function TaskSheet({ editId, projectId }: Props) {
   const handleSave = () => {
     if (!ok) return
     const task: Omit<Task, 'id'> = {
-      title: title.trim(), desc: desc.trim(), due, status, priority,
+      title: title.trim(), desc: desc.trim(), due, time: time || undefined, status, priority,
       pillar: pillar.trim(), projectId: projId || undefined, subs: existing?.subs ?? [],
     }
     if (editId) {
@@ -59,11 +60,11 @@ export function TaskSheet({ editId, projectId }: Props) {
       addTask(task)
       if (addToReminders && due) {
         const formatted = new Date(due + 'T12:00:00').toLocaleDateString('en-AU', { day: 'numeric', month: 'short' })
-        const time = reminderTime || '09:00'
+        const rTime = reminderTime || time || '09:00'
         addReminder({
           glyph: '✅', title: title.trim(),
-          sub: `Due ${formatted} · ${time} · ${priority} priority`,
-          days: daysUntil(due), date: due, time, cat: 'Task',
+          sub: `Due ${formatted} · ${rTime} · ${priority} priority`,
+          days: daysUntil(due), date: due, time: rTime, cat: 'Task',
         })
       }
     }
@@ -86,9 +87,14 @@ export function TaskSheet({ editId, projectId }: Props) {
               style={{ ...inputStyle, width: '100%' }} />
           </div>
           <div style={{ flex: 1 }}>
-            <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1, textTransform: 'uppercase', color: T.dim, marginBottom: 6 }}>Status</div>
-            <StatusDropdown value={status} onChange={setStatus} />
+            <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1, textTransform: 'uppercase', color: T.dim, marginBottom: 6 }}>Time (optional)</div>
+            <input type="time" value={time} onChange={e => setTime(e.target.value)}
+              style={{ ...inputStyle, width: '100%' }} />
           </div>
+        </div>
+        <div>
+          <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1, textTransform: 'uppercase', color: T.dim, marginBottom: 6 }}>Status</div>
+          <StatusDropdown value={status} onChange={setStatus} />
         </div>
 
         <div>

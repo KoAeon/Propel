@@ -12,6 +12,11 @@ const FONT_DISPLAY = "'Space Grotesk', 'Manrope', system-ui, sans-serif"
 const FONT_BODY = "'Manrope', system-ui, sans-serif"
 const STATUS_COLOR: Record<string, string> = { Active: T.good, 'On Hold': T.warn, Completed: T.dim }
 const PRIORITY_COLOR: Record<string, string> = { High: T.a3, Med: T.a1, Low: T.dim }
+function formatTime(t: string) {
+  const [h, m] = t.split(':').map(Number)
+  return `${h % 12 || 12}:${String(m).padStart(2, '0')} ${h < 12 ? 'am' : 'pm'}`
+}
+
 const PILLAR_GRAD: Record<string, [string, string]> = {
   'Family & Connection': ['#FF6BC1', '#FF9D8A'],
   'Financial Freedom':   ['#5B8DEF', '#9B6BFF'],
@@ -121,7 +126,7 @@ export default function Projects() {
                           <div style={{ fontSize: 13.5, fontWeight: 600, color: T.text, textDecoration: t.status === 'Completed' ? 'line-through' : 'none', opacity: t.status === 'Completed' ? .6 : 1 }}>
                             {t.title}
                           </div>
-                          {t.due && <div style={{ fontSize: 11, color: T.dim, marginTop: 1 }}>Due {formatDue(t.due)}</div>}
+                          {t.due && <div style={{ fontSize: 11, color: T.dim, marginTop: 1 }}>Due {formatDue(t.due)}{t.time ? ` · ${formatTime(t.time)}` : ''}</div>}
                         </div>
                         <span style={{ fontSize: 11, fontWeight: 700, color: T.dim, flexShrink: 0 }}>{t.status}</span>
                       </div>

@@ -36,6 +36,7 @@ export interface Task {
   desc: string
   status: TaskStatus
   due: string
+  time?: string
   priority: TaskPriority
   pillar: string
   projectId?: string
