@@ -11,7 +11,11 @@ export const SEED_HABITS: Habit[] = [
   { id: 'journal', glyph: '✍️', from: '#6B8AFF', to: '#8FA9FF', name: 'Evening Journal', meta: 'Gratitude', streak: 12, done: false },
 ]
 
-export const SEED_REMINDERS: Reminder[] = []
+export const SEED_REMINDERS: Reminder[] = [
+  { id: 'pr1', glyph: '🎂', title: "Zara's Birthday",   sub: 'Jun 11 · yearly', days: 4,   date: '2026-06-11', cat: 'Birthday' },
+  { id: 'pr3', glyph: '🎂', title: "Kiki's Birthday",   sub: 'Dec 28 · yearly', days: 204, date: '2026-12-28', cat: 'Birthday' },
+  { id: 'pr2', glyph: '🎂', title: "Maddie's Birthday", sub: 'Mar 10 · yearly', days: 276, date: '2027-03-10', cat: 'Birthday' },
+]
 
 export const SEED_PROJECTS: Project[] = []
 
@@ -76,7 +80,7 @@ export function daysUntil(str: string): number | null {
   return Math.round((d.getTime() - today.getTime()) / 86400000)
 }
 
-const STORE_KEY = 'propel-proto-v6'
+const STORE_KEY = 'propel-proto-v7'
 
 export function loadStored<T>(key: string, fallback: T): T {
   if (typeof window === 'undefined') return fallback
