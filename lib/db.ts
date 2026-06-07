@@ -17,10 +17,10 @@ export function habitFromDb(row: Record<string, unknown>): Habit {
 }
 
 export function reminderToDb(r: Reminder, userId: string) {
-  return { id: r.id, user_id: userId, glyph: r.glyph, title: r.title, sub: r.sub, days: r.days, date: r.date ?? null, time: r.time ?? null, cat: r.cat, gcal_event_id: r.gcalEventId ?? null }
+  return { id: r.id, user_id: userId, glyph: r.glyph, title: r.title, sub: r.sub, days: r.days, date: r.date ?? null, time: r.time ?? null, freq: r.freq ?? null, cat: r.cat, gcal_event_id: r.gcalEventId ?? null }
 }
 export function reminderFromDb(row: Record<string, unknown>): Reminder {
-  return { id: row.id as string, glyph: row.glyph as string, title: row.title as string, sub: row.sub as string, days: row.days as number, date: row.date as string | undefined, time: row.time as string | undefined, cat: row.cat as Reminder['cat'], gcalEventId: row.gcal_event_id as string | undefined }
+  return { id: row.id as string, glyph: row.glyph as string, title: row.title as string, sub: row.sub as string, days: row.days as number, date: row.date as string | undefined, time: row.time as string | undefined, freq: row.freq as Reminder['freq'], cat: row.cat as Reminder['cat'], gcalEventId: row.gcal_event_id as string | undefined }
 }
 
 export function projectToDb(p: Project, userId: string) {

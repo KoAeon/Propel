@@ -64,7 +64,7 @@ export function TaskSheet({ editId, projectId }: Props) {
         addReminder({
           glyph: '✅', title: title.trim(),
           sub: `Due ${formatted} · ${rTime} · ${priority} priority`,
-          days: daysUntil(due), date: due, time: rTime, cat: 'Task',
+          days: daysUntil(due), date: due, time: rTime, freq: 'Once', cat: 'Task',
         })
       }
     }

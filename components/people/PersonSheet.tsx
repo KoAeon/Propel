@@ -64,9 +64,9 @@ export function PersonSheet({ editId }: Props) {
         const { iso, days } = nextBirthday(dob)
         const display = new Date(iso + 'T12:00:00').toLocaleDateString('en-AU', { day: 'numeric', month: 'short' })
         if (existingBdayReminder) {
-          editReminder(existingBdayReminder.id, { title: `${trimmedName}'s Birthday`, sub: `${display} · yearly`, days, date: iso })
+          editReminder(existingBdayReminder.id, { title: `${trimmedName}'s Birthday`, sub: `${display} · yearly`, days, date: iso, freq: 'Yearly' })
         } else {
-          addReminder({ glyph: '🎂', title: `${trimmedName}'s Birthday`, sub: `${display} · yearly`, days, date: iso, cat: 'Birthday' })
+          addReminder({ glyph: '🎂', title: `${trimmedName}'s Birthday`, sub: `${display} · yearly`, days, date: iso, freq: 'Yearly', cat: 'Birthday' })
         }
       }
     } else {
@@ -74,7 +74,7 @@ export function PersonSheet({ editId }: Props) {
       if (addBdayReminder && dob) {
         const { iso, days } = nextBirthday(dob)
         const display = new Date(iso + 'T12:00:00').toLocaleDateString('en-AU', { day: 'numeric', month: 'short' })
-        addReminder({ glyph: '🎂', title: `${trimmedName}'s Birthday`, sub: `${display} · yearly`, days, date: iso, cat: 'Birthday' })
+        addReminder({ glyph: '🎂', title: `${trimmedName}'s Birthday`, sub: `${display} · yearly`, days, date: iso, freq: 'Yearly', cat: 'Birthday' })
       }
     }
   }

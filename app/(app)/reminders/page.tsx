@@ -86,15 +86,18 @@ export default function Reminders() {
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontSize: 14.5, fontWeight: 700, color: T.text }}>{r.title}</div>
                   <div style={{ fontSize: 12, color: T.dim, marginTop: 2 }}>{r.sub}</div>
-                  {autoRemind && (
-                    <div style={{ display: 'flex', gap: 4, marginTop: 6 }}>
-                      {['−7d', 'day-of'].map(x => (
-                        <span key={x} style={{ fontSize: 9.5, fontWeight: 700, color: T.dim, padding: '2px 6px', borderRadius: 6, background: T.surface, border: `1px solid ${T.border}` }}>
-                          {x}
-                        </span>
-                      ))}
-                    </div>
-                  )}
+                  <div style={{ display: 'flex', gap: 4, marginTop: 6, flexWrap: 'wrap' }}>
+                    {r.freq && r.freq !== 'Once' && (
+                      <span style={{ fontSize: 9.5, fontWeight: 700, color: T.a1, padding: '2px 7px', borderRadius: 6, background: T.surface, border: `1px solid ${T.a1 + '44'}` }}>
+                        🔁 {r.freq}
+                      </span>
+                    )}
+                    {autoRemind && ['−7d', 'day-of'].map(x => (
+                      <span key={x} style={{ fontSize: 9.5, fontWeight: 700, color: T.dim, padding: '2px 6px', borderRadius: 6, background: T.surface, border: `1px solid ${T.border}` }}>
+                        {x}
+                      </span>
+                    ))}
+                  </div>
                 </div>
 
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>

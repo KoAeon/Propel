@@ -7,10 +7,11 @@ import { Icon } from '@/components/ui/Icon'
 import { T } from '@/lib/theme'
 import { CAT_GLYPH } from '@/lib/seed'
 import { useApp } from '@/context/AppContext'
-import type { Reminder } from '@/lib/types'
+import type { Reminder, ReminderFreq } from '@/lib/types'
 
 const FONT_BODY = "'Manrope', system-ui, sans-serif"
 const CATS = ['Renewal', 'Birthday', 'Financial', 'Health', 'Task'] as const
+const FREQS: ReminderFreq[] = ['Once', 'Weekly', 'Fortnightly', 'Monthly', 'Yearly']
 
 function daysFromDate(iso: string): number {
   if (!iso) return 30
@@ -48,6 +49,7 @@ export function AddReminderSheet({ editId }: Props) {
   const [date, setDate] = useState(existing?.date ?? '')
   const [time, setTime] = useState(existing?.time ?? '')
   const [cat, setCat] = useState<typeof CATS[number]>(existing?.cat ?? 'Renewal')
+  const [freq, setFreq] = useState<ReminderFreq>(existing?.freq ?? 'Once')
   const [auto, setAuto] = useState(true)
 
   const days = date ? daysFromDate(date) : null
@@ -70,6 +72,7 @@ export function AddReminderSheet({ editId }: Props) {
       days: days ?? 365,
       date: date || undefined,
       time: time || undefined,
+      freq,
       cat,
     }
     if (editId) {
@@ -120,6 +123,28 @@ export function AddReminderSheet({ editId }: Props) {
               {!time && <span style={{ color: T.dim, fontWeight: 400 }}> · defaults to 9:00am</span>}
             </div>
           )}
+        </div>
+
+        <div>
+          <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1.3, textTransform: 'uppercase', color: T.dim }}>
+            Frequency
+          </div>
+          <div style={{ display: 'flex', gap: 6, marginTop: 8, flexWrap: 'wrap' }}>
+            {FREQS.map(f => (
+              <Press
+                key={f}
+                onClick={() => setFreq(f)}
+                scale={0.95}
+                style={{
+                  padding: '8px 13px', borderRadius: 999, fontSize: 12.5, fontWeight: 700,
+                  background: freq === f ? T.grad : T.surface2,
+                  color: freq === f ? '#fff' : T.dim,
+                  border: `1px solid ${freq === f ? 'transparent' : T.border}`,
+                  boxShadow: freq === f ? T.glow : 'none',
+                }}
+              >{f}</Press>
+            ))}
+          </div>
         </div>
 
         <div>

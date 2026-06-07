@@ -9,6 +9,8 @@ export interface Habit {
   done: boolean
 }
 
+export type ReminderFreq = 'Once' | 'Weekly' | 'Fortnightly' | 'Monthly' | 'Yearly'
+
 export interface Reminder {
   id: string
   glyph: string
@@ -17,6 +19,7 @@ export interface Reminder {
   days: number
   date?: string
   time?: string
+  freq?: ReminderFreq
   cat: 'Renewal' | 'Birthday' | 'Financial' | 'Health' | 'Task'
   gcalEventId?: string
 }
