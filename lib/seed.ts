@@ -49,13 +49,14 @@ export const STATUS_COLOR: Record<string, string> = {
   Completed: '#1F9D6B',
 }
 
-export const REMINDER_CATS = ['All', 'Renewal', 'Birthday', 'Financial', 'Health'] as const
+export const REMINDER_CATS = ['All', 'Renewal', 'Birthday', 'Financial', 'Health', 'Task'] as const
 
 export const CAT_GLYPH: Record<string, string> = {
   Renewal: '🔄',
   Birthday: '🎂',
   Financial: '💰',
   Health: '🩺',
+  Task: '✅',
 }
 
 export function formatDue(due: string): string {

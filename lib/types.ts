@@ -17,7 +17,7 @@ export interface Reminder {
   days: number
   date?: string
   time?: string
-  cat: 'Renewal' | 'Birthday' | 'Financial' | 'Health'
+  cat: 'Renewal' | 'Birthday' | 'Financial' | 'Health' | 'Task'
   gcalEventId?: string
 }
 
