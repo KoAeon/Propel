@@ -58,6 +58,15 @@ function del(path: string) {
   return fetch(path, { method: 'DELETE' })
 }
 
+function sortReminders(rs: Reminder[]) {
+  return [...rs].sort((a, b) => {
+    if (a.days !== b.days) return a.days - b.days
+    const ta = a.time ?? '09:00'
+    const tb = b.time ?? '09:00'
+    return ta < tb ? -1 : ta > tb ? 1 : 0
+  })
+}
+
 export function AppProvider({ children }: { children: ReactNode }) {
   const { data: session, status: sessionStatus } = useSession()
   const authed = sessionStatus === 'authenticated'
@@ -177,18 +186,18 @@ export function AppProvider({ children }: { children: ReactNode }) {
   // ── Reminders ─────────────────────────────────────────
   const addReminder = useCallback((r: Omit<Reminder, 'id'>) => {
     const reminder = { ...r, id: 'r' + Date.now() }
-    setReminders(rs => [...rs, reminder].sort((a, b) => a.days - b.days))
+    setReminders(rs => sortReminders([...rs, reminder]))
     if (authed) post('/api/db/reminders', reminder)
     setSheet(null); flash('Reminder added · syncing to Google Calendar…')
   }, [authed, flash])
 
   const editReminder = useCallback((id: string, updates: Partial<Omit<Reminder, 'id'>>) => {
-    setReminders(rs => rs.map(r => {
+    setReminders(rs => sortReminders(rs.map(r => {
       if (r.id !== id) return r
       const updated = { ...r, ...updates, gcalEventId: undefined }
       if (authed) post('/api/db/reminders', updated)
       return updated
-    }).sort((a, b) => a.days - b.days))
+    })))
     setSheet(null); flash('Reminder updated · syncing to Google Calendar…')
   }, [authed, flash])
 
