@@ -22,10 +22,18 @@ export function GoogleCalendarConnect() {
     setSyncing(true)
     setSyncResult(null)
     try {
+      const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone
+      const today = new Date()
+      const toLocalISO = (days: number) => {
+        const d = new Date(today)
+        d.setDate(d.getDate() + days)
+        return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+      }
+      const remindersWithDates = reminders.map(r => r.date ? r : { ...r, date: toLocalISO(r.days) })
       const res = await fetch('/api/calendar/sync', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ reminders }),
+        body: JSON.stringify({ reminders: remindersWithDates, timeZone }),
       })
       const data = await res.json()
       if (res.ok || res.status === 207) {
