@@ -109,6 +109,14 @@ export function AppProvider({ children }: { children: ReactNode }) {
           setAutoRemindState(data.autoRemind ?? true)
           setWebModeState(data.webMode ?? false)
         }
+        // If Supabase is empty, check for local data to migrate
+        const isEmpty = !data || (
+          !data.habits?.length && !data.reminders?.length &&
+          !data.tasks?.length && !data.projects?.length && !data.people?.length
+        )
+        if (isEmpty && typeof window !== 'undefined' && !!localStorage.getItem('propel-data')) {
+          setCloudSyncNeeded(true)
+        }
       })
       .catch(() => {})
       .finally(() => setDbLoading(false))
