@@ -33,7 +33,14 @@ export default function Tasks() {
       </div>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-        {tasks.map(t => {
+        {[...tasks]
+          .sort((a, b) => {
+            if (!a.due && !b.due) return 0
+            if (!a.due) return 1
+            if (!b.due) return -1
+            return a.due < b.due ? -1 : a.due > b.due ? 1 : 0
+          })
+          .map(t => {
           const dn = t.subs.filter(s => s.done).length
           const p = t.status === 'Completed' ? 100 : (t.subs.length ? Math.round(dn / t.subs.length * 100) : 0)
           const project = t.projectId ? projects.find(pr => pr.id === t.projectId) : null
