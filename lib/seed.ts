@@ -81,7 +81,7 @@ export function daysUntil(str: string): number | null {
   return Math.round((d.getTime() - today.getTime()) / 86400000)
 }
 
-const STORE_KEY = 'propel-proto-v8'
+const STORE_KEY = 'propel-data'
 
 export function loadStored<T>(key: string, fallback: T): T {
   if (typeof window === 'undefined') return fallback
