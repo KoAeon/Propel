@@ -5,43 +5,75 @@ import { Press } from '@/components/ui/Press'
 import { Toggle } from '@/components/ui/Toggle'
 import { Icon } from '@/components/ui/Icon'
 import { T } from '@/lib/theme'
-import { daysUntil, CAT_GLYPH } from '@/lib/seed'
+import { CAT_GLYPH } from '@/lib/seed'
 import { useApp } from '@/context/AppContext'
 import type { Reminder } from '@/lib/types'
 
 const FONT_BODY = "'Manrope', system-ui, sans-serif"
 const CATS = ['Renewal', 'Birthday', 'Financial', 'Health'] as const
 
-export function AddReminderSheet() {
-  const { closeSheet, addReminder } = useApp()
-  const [title, setTitle] = useState('')
-  const [when, setWhen] = useState('')
-  const [cat, setCat] = useState<typeof CATS[number]>('Renewal')
+function daysFromDate(iso: string): number {
+  if (!iso) return 30
+  const target = new Date(iso + 'T12:00:00')
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+  return Math.round((target.getTime() - today.getTime()) / 86400000)
+}
+
+function formatDisplayDate(iso: string): string {
+  if (!iso) return 'No date set'
+  const d = new Date(iso + 'T12:00:00')
+  return d.toLocaleDateString('en-AU', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })
+}
+
+function todayISO(): string {
+  const d = new Date()
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+}
+
+interface Props {
+  editId?: string
+}
+
+export function AddReminderSheet({ editId }: Props) {
+  const { closeSheet, addReminder, editReminder, reminders } = useApp()
+  const existing = editId ? reminders.find(r => r.id === editId) : undefined
+
+  const [title, setTitle] = useState(existing?.title ?? '')
+  const [date, setDate] = useState(existing?.date ?? '')
+  const [cat, setCat] = useState<typeof CATS[number]>(existing?.cat ?? 'Renewal')
   const [auto, setAuto] = useState(true)
 
-  const d = daysUntil(when)
+  const days = date ? daysFromDate(date) : null
   const ok = title.trim().length > 0
 
   const inputStyle: React.CSSProperties = {
     width: '100%', boxSizing: 'border-box', padding: '13px 15px', borderRadius: 14,
     background: T.surface2, border: `1px solid ${T.border}`,
     color: T.text, fontFamily: FONT_BODY, fontSize: 15, outline: 'none',
+    colorScheme: 'dark',
   }
 
-  const handleAdd = () => {
+  const handleSave = () => {
     if (!ok) return
+    const sub = date ? formatDisplayDate(date) : 'No date set'
     const reminder: Omit<Reminder, 'id'> = {
       glyph: CAT_GLYPH[cat],
       title: title.trim(),
-      sub: when ? `${when}${auto ? ' · auto' : ''}` : 'No date set',
-      days: d == null ? 30 : d,
+      sub,
+      days: days ?? 365,
+      date: date || undefined,
       cat,
     }
-    addReminder(reminder)
+    if (editId) {
+      editReminder(editId, reminder)
+    } else {
+      addReminder(reminder)
+    }
   }
 
   return (
-    <Sheet onClose={closeSheet} title="New Reminder">
+    <Sheet onClose={closeSheet} title={editId ? 'Edit Reminder' : 'New Reminder'}>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 14, fontFamily: FONT_BODY }}>
         <div>
           <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1.3, textTransform: 'uppercase', color: T.dim }}>
@@ -55,22 +87,25 @@ export function AddReminderSheet() {
             style={{ ...inputStyle, marginTop: 8 }}
           />
         </div>
+
         <div>
           <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1.3, textTransform: 'uppercase', color: T.dim }}>
             When
           </div>
           <input
-            value={when}
-            onChange={e => setWhen(e.target.value)}
-            placeholder='e.g. Nov 20'
+            type="date"
+            value={date}
+            min={todayISO()}
+            onChange={e => setDate(e.target.value)}
             style={{ ...inputStyle, marginTop: 8 }}
           />
-          {when && (
-            <div style={{ fontSize: 12, color: d != null ? T.good : T.dim, marginTop: 6, fontWeight: 600 }}>
-              {d != null ? `${d} days away` : 'Type a date like "Nov 20"'}
+          {date && days !== null && (
+            <div style={{ fontSize: 12, color: days <= 7 ? T.a3 : T.good, marginTop: 6, fontWeight: 600 }}>
+              {days === 0 ? 'Today' : days === 1 ? 'Tomorrow' : `${days} days away`}
             </div>
           )}
         </div>
+
         <div>
           <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1.3, textTransform: 'uppercase', color: T.dim }}>
             Category
@@ -94,6 +129,7 @@ export function AddReminderSheet() {
             ))}
           </div>
         </div>
+
         <div style={{
           display: 'flex', alignItems: 'center', gap: 12, padding: '13px 15px',
           borderRadius: 14, background: T.surface2, border: `1px solid ${T.border}`,
@@ -101,12 +137,13 @@ export function AddReminderSheet() {
           <Icon name="bell" size={18} color={T.a1} />
           <div style={{ flex: 1 }}>
             <div style={{ fontSize: 13.5, fontWeight: 700, color: T.text }}>Auto-remind me</div>
-            <div style={{ fontSize: 11.5, color: T.dim }}>Nudge 30 & 7 days before</div>
+            <div style={{ fontSize: 11.5, color: T.dim }}>Nudge 7 days before + day-of</div>
           </div>
           <Toggle on={auto} onClick={() => setAuto(!auto)} />
         </div>
+
         <Press
-          onClick={handleAdd}
+          onClick={handleSave}
           scale={0.97}
           style={{
             marginTop: 4, padding: 15, borderRadius: 16, textAlign: 'center',
@@ -116,7 +153,7 @@ export function AddReminderSheet() {
             boxShadow: ok ? T.glow : 'none',
           }}
         >
-          Add reminder
+          {editId ? 'Save changes' : 'Add reminder'}
         </Press>
       </div>
     </Sheet>

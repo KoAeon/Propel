@@ -22,6 +22,8 @@ const PATHS: Record<string, string> = {
   search: 'M11 18a7 7 0 100-14 7 7 0 000 14zM20 20l-4-4',
   mail: 'M3 6h18v12H3zM3 7l9 6 9-6',
   x: 'M18 6L6 18M6 6l12 12',
+  trash: 'M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6',
+  pencil: 'M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7M18.5 2.5a2.12 2.12 0 013 3L12 15l-4 1 1-4 9.5-9.5z',
 }
 
 interface IconProps {

@@ -15,6 +15,7 @@ export interface Reminder {
   title: string
   sub: string
   days: number
+  date?: string
   cat: 'Renewal' | 'Birthday' | 'Financial' | 'Health'
   gcalEventId?: string
 }
@@ -42,5 +43,6 @@ export interface Task {
 export type SheetType =
   | { type: 'quick' }
   | { type: 'reminder' }
+  | { type: 'edit-reminder'; id: string }
   | { type: 'task'; id: string }
   | { type: 'info'; message: string }

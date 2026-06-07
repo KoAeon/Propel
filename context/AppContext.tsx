@@ -15,6 +15,8 @@ interface AppState {
   toast: string | null
   toggleHabit: (id: string) => void
   addReminder: (r: Omit<Reminder, 'id'>) => void
+  editReminder: (id: string, r: Partial<Omit<Reminder, 'id'>>) => void
+  deleteReminder: (id: string) => void
   setReminderEventId: (id: string, gcalEventId: string) => void
   toggleSub: (taskId: string, i: number) => void
   setStatus: (taskId: string, status: TaskStatus) => void
@@ -55,6 +57,20 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setReminders(rs => [{ ...r, id: 'r' + Date.now() }, ...rs].sort((a, b) => a.days - b.days))
     setSheet(null)
     flash('Reminder added · syncing to Google Calendar…')
+  }, [flash])
+
+  const editReminder = useCallback((id: string, updates: Partial<Omit<Reminder, 'id'>>) => {
+    setReminders(rs => rs
+      .map(r => r.id === id ? { ...r, ...updates, gcalEventId: undefined } : r)
+      .sort((a, b) => a.days - b.days)
+    )
+    setSheet(null)
+    flash('Reminder updated · syncing to Google Calendar…')
+  }, [flash])
+
+  const deleteReminder = useCallback((id: string) => {
+    setReminders(rs => rs.filter(r => r.id !== id))
+    flash('Reminder deleted')
   }, [flash])
 
   const setReminderEventId = useCallback((id: string, gcalEventId: string) => {
@@ -102,9 +118,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
   return (
     <Ctx.Provider value={{
       habits, reminders, tasks, autoRemind, sheet, toast,
-      toggleHabit, addReminder, setReminderEventId, toggleSub, setStatus,
-      setSubText, setSubDue, addSub, delSub, setAutoRemind,
-      openSheet, closeSheet, flash,
+      toggleHabit, addReminder, editReminder, deleteReminder, setReminderEventId,
+      toggleSub, setStatus, setSubText, setSubDue, addSub, delSub,
+      setAutoRemind, openSheet, closeSheet, flash,
     }}>
       {children}
     </Ctx.Provider>

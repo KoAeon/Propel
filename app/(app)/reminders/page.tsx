@@ -14,7 +14,7 @@ const FONT_DISPLAY = "'Space Grotesk', 'Manrope', system-ui, sans-serif"
 
 export default function Reminders() {
   const router = useRouter()
-  const { reminders, autoRemind, setAutoRemind, openSheet } = useApp()
+  const { reminders, autoRemind, setAutoRemind, openSheet, deleteReminder } = useApp()
   const [filter, setFilter] = useState('All')
 
   const list = reminders.filter(r => filter === 'All' || r.cat === filter)
@@ -47,7 +47,7 @@ export default function Reminders() {
         </div>
         <div style={{ flex: 1 }}>
           <div style={{ fontSize: 13.5, fontWeight: 700, color: T.text }}>Auto-reminders {autoRemind ? 'on' : 'off'}</div>
-          <div style={{ fontSize: 12, color: T.dim }}>Nudge 30 & 7 days before each date</div>
+          <div style={{ fontSize: 12, color: T.dim }}>Nudge 7 days before each date</div>
         </div>
         <Toggle on={autoRemind} onClick={() => setAutoRemind(!autoRemind)} />
       </Card>
@@ -88,7 +88,7 @@ export default function Reminders() {
                   <div style={{ fontSize: 12, color: T.dim, marginTop: 2 }}>{r.sub}</div>
                   {autoRemind && (
                     <div style={{ display: 'flex', gap: 4, marginTop: 6 }}>
-                      {['−30d', '−7d'].map(x => (
+                      {['−7d', 'day-of'].map(x => (
                         <span key={x} style={{ fontSize: 9.5, fontWeight: 700, color: T.dim, padding: '2px 6px', borderRadius: 6, background: T.surface, border: `1px solid ${T.border}` }}>
                           {x}
                         </span>
@@ -96,15 +96,40 @@ export default function Reminders() {
                     </div>
                   )}
                 </div>
-                <div style={{ textAlign: 'center', minWidth: 46, padding: '6px 9px', borderRadius: 12, background: T.surface, border: `1px solid ${T.border}` }}>
-                  <div style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 17, color: r.days <= 9 ? T.a3 : T.text, lineHeight: 1 }}>{r.days}</div>
-                  <div style={{ fontSize: 9, fontWeight: 700, color: T.dim, marginTop: 2 }}>DAYS</div>
+
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
+                  <div style={{ textAlign: 'center', minWidth: 46, padding: '6px 9px', borderRadius: 12, background: T.surface, border: `1px solid ${T.border}` }}>
+                    <div style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 17, color: r.days <= 9 ? T.a3 : T.text, lineHeight: 1 }}>{r.days}</div>
+                    <div style={{ fontSize: 9, fontWeight: 700, color: T.dim, marginTop: 2 }}>DAYS</div>
+                  </div>
+                  <div style={{ display: 'flex', gap: 4 }}>
+                    <Press
+                      onClick={() => openSheet({ type: 'edit-reminder', id: r.id })}
+                      scale={0.9}
+                      style={{ width: 28, height: 28, borderRadius: 8, background: T.surface2, border: `1px solid ${T.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                    >
+                      <Icon name="pencil" size={13} color={T.dim} />
+                    </Press>
+                    <Press
+                      onClick={() => deleteReminder(r.id)}
+                      scale={0.9}
+                      style={{ width: 28, height: 28, borderRadius: 8, background: T.surface2, border: `1px solid ${T.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                    >
+                      <Icon name="trash" size={13} color={T.a3} />
+                    </Press>
+                  </div>
                 </div>
               </div>
             ))}
           </div>
         </div>
       ))}
+
+      {list.length === 0 && (
+        <div style={{ textAlign: 'center', padding: '60px 0', color: T.faint, fontSize: 14 }}>
+          No reminders yet — tap + to add one
+        </div>
+      )}
     </div>
   )
 }

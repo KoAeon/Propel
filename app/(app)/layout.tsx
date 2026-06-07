@@ -53,6 +53,7 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
       {/* Sheets */}
       {sheet?.type === 'quick' && <QuickAdd />}
       {sheet?.type === 'reminder' && <AddReminderSheet />}
+      {sheet?.type === 'edit-reminder' && <AddReminderSheet editId={(sheet as {type:'edit-reminder';id:string}).id} />}
       {sheet?.type === 'task' && openTask && <TaskDetailSheet task={openTask} />}
       {sheet?.type === 'info' && (
         <Sheet title="Heads up" onClose={closeSheet}>

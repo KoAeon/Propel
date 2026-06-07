@@ -5,25 +5,25 @@ import type { Reminder } from '@/lib/types'
 
 const CALENDAR_API = 'https://www.googleapis.com/calendar/v3/calendars/primary/events'
 
-function toDateTimeAt9am(days: number): { start: string; end: string } {
-  const d = new Date()
-  d.setDate(d.getDate() + days)
-  const yyyy = d.getFullYear()
-  const mm = String(d.getMonth() + 1).padStart(2, '0')
-  const dd = String(d.getDate()).padStart(2, '0')
-  return {
-    start: `${yyyy}-${mm}-${dd}T09:00:00`,
-    end:   `${yyyy}-${mm}-${dd}T10:00:00`,
-  }
-}
-
 function buildEvent(reminder: Reminder, timeZone: string) {
-  const { start, end } = toDateTimeAt9am(reminder.days)
+  let dateStr: string
+  if (reminder.date) {
+    dateStr = reminder.date
+  } else {
+    const d = new Date()
+    d.setDate(d.getDate() + reminder.days)
+    const yyyy = d.getFullYear()
+    const mm = String(d.getMonth() + 1).padStart(2, '0')
+    const dd = String(d.getDate()).padStart(2, '0')
+    dateStr = `${yyyy}-${mm}-${dd}`
+  }
+  const start = `${dateStr}T09:00:00`
+  const end = `${dateStr}T10:00:00`
   const isRecurring = reminder.cat === 'Birthday'
 
   return {
     summary: reminder.title,
-    description: reminder.sub,
+    description: reminder.sub || reminder.title,
     start: { dateTime: start, timeZone },
     end:   { dateTime: end,   timeZone },
     ...(isRecurring ? { recurrence: ['RRULE:FREQ=YEARLY'] } : {}),
