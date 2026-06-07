@@ -1,6 +1,6 @@
 'use client'
 import { useState } from 'react'
-import { useSession } from 'next-auth/react'
+import { useSession, signIn } from 'next-auth/react'
 import { useApp } from '@/context/AppContext'
 import { Card } from '@/components/ui/Card'
 import { Ring } from '@/components/ui/Ring'
@@ -57,7 +57,7 @@ export default function You() {
       <div style={{ fontFamily: FONT_DISPLAY, fontSize: 17, fontWeight: 700, color: T.text, letterSpacing: -.3, margin: '22px 2px 12px' }}>
         Cloud Sync
       </div>
-      <Card pad={14} radius={16} style={{ marginBottom: cloudSyncNeeded ? 8 : 0 }}>
+      <Card pad={14} radius={16} style={{ marginBottom: cloudSyncNeeded || sessionStatus === 'unauthenticated' ? 8 : 0 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
           <div style={{ fontSize: 22 }}>{sessionStatus === 'authenticated' ? '☁️' : '💾'}</div>
           <div style={{ flex: 1 }}>
@@ -67,12 +67,22 @@ export default function You() {
             <div style={{ fontSize: 12, color: T.dim, marginTop: 1 }}>
               {sessionStatus === 'authenticated'
                 ? dbLoading ? 'Loading data…' : 'Data syncs across all your devices'
-                : 'Sign in with Google to enable cloud sync'}
+                : 'Sign in with Google to sync across devices'}
             </div>
           </div>
           <div style={{ width: 10, height: 10, borderRadius: '50%', background: sessionStatus === 'authenticated' ? T.good : T.warn, flexShrink: 0 }} />
         </div>
       </Card>
+      {sessionStatus === 'unauthenticated' && (
+        <Press onClick={() => signIn('google')} scale={0.97}>
+          <Card pad={14} radius={16} style={{ background: T.grad, boxShadow: T.glow, marginBottom: 8 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+              <div style={{ fontSize: 20 }}>🔑</div>
+              <div style={{ fontSize: 14, fontWeight: 700, color: '#fff' }}>Sign in with Google</div>
+            </div>
+          </Card>
+        </Press>
+      )}
       {cloudSyncNeeded && (
         <Press onClick={async () => { setSyncing(true); await syncToCloud(); setSyncing(false) }} scale={0.97}>
           <Card pad={14} radius={16} style={{ background: T.grad, boxShadow: T.glow }}>
