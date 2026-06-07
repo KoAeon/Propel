@@ -30,6 +30,7 @@ export function TaskSheet({ editId, projectId }: Props) {
   const [pillar, setPillar] = useState(existing?.pillar ?? '')
   const [projId, setProjId] = useState(existing?.projectId ?? projectId ?? '')
   const [addToReminders, setAddToReminders] = useState(false)
+  const [reminderTime, setReminderTime] = useState('')
 
   const ok = title.trim().length > 0
 
@@ -58,10 +59,11 @@ export function TaskSheet({ editId, projectId }: Props) {
       addTask(task)
       if (addToReminders && due) {
         const formatted = new Date(due + 'T12:00:00').toLocaleDateString('en-AU', { day: 'numeric', month: 'short' })
+        const time = reminderTime || '09:00'
         addReminder({
           glyph: '✅', title: title.trim(),
-          sub: `Due ${formatted} · ${priority} priority`,
-          days: daysUntil(due), date: due, cat: 'Task',
+          sub: `Due ${formatted} · ${time} · ${priority} priority`,
+          days: daysUntil(due), date: due, time, cat: 'Task',
         })
       }
     }
@@ -131,24 +133,33 @@ export function TaskSheet({ editId, projectId }: Props) {
         )}
 
         {!editId && due && (
-          <Press onClick={() => setAddToReminders(v => !v)} scale={0.98} style={{
-            display: 'flex', alignItems: 'center', gap: 12, padding: '12px 14px', borderRadius: 12,
-            background: addToReminders ? T.surface2 : 'transparent',
-            border: `1px solid ${addToReminders ? T.a1 + '66' : T.border}`,
-          }}>
-            <div style={{
-              width: 22, height: 22, borderRadius: 6, flexShrink: 0,
-              background: addToReminders ? T.a1 : 'transparent',
-              border: `2px solid ${addToReminders ? T.a1 : T.border}`,
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              transition: 'all .15s ease',
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            <Press onClick={() => setAddToReminders(v => !v)} scale={0.98} style={{
+              display: 'flex', alignItems: 'center', gap: 12, padding: '12px 14px', borderRadius: 12,
+              background: addToReminders ? T.surface2 : 'transparent',
+              border: `1px solid ${addToReminders ? T.a1 + '66' : T.border}`,
             }}>
-              {addToReminders && <span style={{ fontSize: 12, color: '#fff', lineHeight: 1 }}>✓</span>}
-            </div>
-            <span style={{ fontSize: 13.5, fontWeight: 600, color: addToReminders ? T.text : T.dim }}>
-              Also add to Reminders
-            </span>
-          </Press>
+              <div style={{
+                width: 22, height: 22, borderRadius: 6, flexShrink: 0,
+                background: addToReminders ? T.a1 : 'transparent',
+                border: `2px solid ${addToReminders ? T.a1 : T.border}`,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                transition: 'all .15s ease',
+              }}>
+                {addToReminders && <span style={{ fontSize: 12, color: '#fff', lineHeight: 1 }}>✓</span>}
+              </div>
+              <span style={{ fontSize: 13.5, fontWeight: 600, color: addToReminders ? T.text : T.dim }}>
+                Also add to Reminders
+              </span>
+            </Press>
+            {addToReminders && (
+              <div style={{ paddingLeft: 2 }}>
+                <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1, textTransform: 'uppercase', color: T.dim, marginBottom: 6 }}>Reminder time <span style={{ fontWeight: 400, textTransform: 'none', letterSpacing: 0 }}>(defaults to 9:00 am)</span></div>
+                <input type="time" value={reminderTime} onChange={e => setReminderTime(e.target.value)}
+                  style={{ ...inputStyle, width: 'auto' }} />
+              </div>
+            )}
+          </div>
         )}
 
         <Press onClick={handleSave} scale={0.97} style={{
