@@ -8,9 +8,23 @@ import { T } from '@/lib/theme'
 
 const FONT_DISPLAY = "'Space Grotesk', 'Manrope', system-ui, sans-serif"
 
+function daysUntilBirthday(dob: string): { date: string; days: number } {
+  const d = new Date(dob + 'T12:00:00')
+  const today = new Date(); today.setHours(0, 0, 0, 0)
+  let next = new Date(today.getFullYear(), d.getMonth(), d.getDate())
+  if (next < today) next = new Date(today.getFullYear() + 1, d.getMonth(), d.getDate())
+  const days = Math.round((next.getTime() - today.getTime()) / 86400000)
+  const date = next.toLocaleDateString('en-AU', { day: 'numeric', month: 'short' })
+  return { date, days }
+}
+
 export default function You() {
-  const { habits } = useApp()
-  const bestStreak = Math.max(...habits.map(h => h.streak))
+  const { habits, people } = useApp()
+  const bestStreak = habits.length ? Math.max(...habits.map(h => h.streak)) : 0
+  const birthdays = people
+    .filter(p => p.dob)
+    .map(p => ({ name: p.name, ...daysUntilBirthday(p.dob!) }))
+    .sort((a, b) => a.days - b.days)
 
   return (
     <div>
@@ -59,11 +73,7 @@ export default function You() {
         Important Dates
       </div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 9 }}>
-        {[
-          { name: 'Zara', date: 'Jun 11', days: 5 },
-          { name: 'Maddie', date: 'Mar 10', days: 277 },
-          { name: 'Kiki', date: 'Dec 28', days: 205 },
-        ].map(b => (
+        {birthdays.map(b => (
           <Card key={b.name} pad={14} radius={16} style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
             <div style={{ width: 38, height: 38, borderRadius: 11, background: T.grad, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, boxShadow: T.glow }}>
               🎂
@@ -78,6 +88,11 @@ export default function You() {
             </div>
           </Card>
         ))}
+        {birthdays.length === 0 && (
+          <div style={{ padding: '20px 0', textAlign: 'center', color: T.faint, fontSize: 13 }}>
+            Add birthdays in People to see them here
+          </div>
+        )}
       </div>
     </div>
   )
