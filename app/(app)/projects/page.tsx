@@ -73,6 +73,10 @@ export default function Projects() {
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 8 }}>
                   <span style={{ fontSize: 11, fontWeight: 700, color: STATUS_COLOR[p.status] }}>{p.status}</span>
                   <div style={{ display: 'flex', gap: 5 }}>
+                    <Press onClick={() => openSheet({ type: 'add-task', projectId: p.id })} scale={0.9}
+                      style={{ width: 26, height: 26, borderRadius: 7, background: T.grad, boxShadow: T.glow, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <Icon name="plus" size={12} color="#fff" sw={2.2} />
+                    </Press>
                     <Press onClick={() => openSheet({ type: 'edit-project', id: p.id })} scale={0.9}
                       style={{ width: 26, height: 26, borderRadius: 7, background: T.surface2, border: `1px solid ${T.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                       <Icon name="pencil" size={12} color={T.dim} />
