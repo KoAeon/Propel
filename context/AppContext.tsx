@@ -15,6 +15,7 @@ interface AppState {
   toast: string | null
   toggleHabit: (id: string) => void
   addReminder: (r: Omit<Reminder, 'id'>) => void
+  setReminderEventId: (id: string, gcalEventId: string) => void
   toggleSub: (taskId: string, i: number) => void
   setStatus: (taskId: string, status: TaskStatus) => void
   setSubText: (taskId: string, i: number, text: string) => void
@@ -53,8 +54,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const addReminder = useCallback((r: Omit<Reminder, 'id'>) => {
     setReminders(rs => [{ ...r, id: 'r' + Date.now() }, ...rs].sort((a, b) => a.days - b.days))
     setSheet(null)
-    flash('Reminder added · auto-nudges set')
+    flash('Reminder added · syncing to Google Calendar…')
   }, [flash])
+
+  const setReminderEventId = useCallback((id: string, gcalEventId: string) => {
+    setReminders(rs => rs.map(r => r.id === id ? { ...r, gcalEventId } : r))
+  }, [])
 
   const toggleSub = useCallback((taskId: string, i: number) => {
     setTasks(ts => ts.map(t =>
@@ -97,7 +102,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   return (
     <Ctx.Provider value={{
       habits, reminders, tasks, autoRemind, sheet, toast,
-      toggleHabit, addReminder, toggleSub, setStatus,
+      toggleHabit, addReminder, setReminderEventId, toggleSub, setStatus,
       setSubText, setSubDue, addSub, delSub, setAutoRemind,
       openSheet, closeSheet, flash,
     }}>

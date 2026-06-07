@@ -16,6 +16,7 @@ export interface Reminder {
   sub: string
   days: number
   cat: 'Renewal' | 'Birthday' | 'Financial' | 'Health'
+  gcalEventId?: string
 }
 
 export interface Subtask {

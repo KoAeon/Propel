@@ -9,6 +9,7 @@ import { QuickAdd } from '@/components/sheets/QuickAdd'
 import { AddReminderSheet } from '@/components/sheets/AddReminderSheet'
 import { TaskDetailSheet } from '@/components/tasks/TaskDetailSheet'
 import { Sheet } from '@/components/sheets/Sheet'
+import { AutoCalendarSync } from '@/components/AutoCalendarSync'
 import { T } from '@/lib/theme'
 
 const FONT_BODY = "'Manrope', system-ui, sans-serif"
@@ -47,6 +48,7 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
         {children}
       </div>
       <BottomNav />
+      <AutoCalendarSync />
 
       {/* Sheets */}
       {sheet?.type === 'quick' && <QuickAdd />}

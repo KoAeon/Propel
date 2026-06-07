@@ -5,34 +5,35 @@ import type { Reminder } from '@/lib/types'
 
 const CALENDAR_API = 'https://www.googleapis.com/calendar/v3/calendars/primary/events'
 
-function toISODate(days: number): string {
+function toDateTimeAt9am(days: number): { start: string; end: string } {
   const d = new Date()
   d.setDate(d.getDate() + days)
-  return d.toISOString().split('T')[0]
+  const yyyy = d.getFullYear()
+  const mm = String(d.getMonth() + 1).padStart(2, '0')
+  const dd = String(d.getDate()).padStart(2, '0')
+  return {
+    start: `${yyyy}-${mm}-${dd}T09:00:00`,
+    end:   `${yyyy}-${mm}-${dd}T10:00:00`,
+  }
 }
 
-function nextDay(isoDate: string): string {
-  const d = new Date(isoDate)
-  d.setDate(d.getDate() + 1)
-  return d.toISOString().split('T')[0]
-}
-
-function buildEvent(reminder: Reminder) {
-  const date = toISODate(reminder.days)
+function buildEvent(reminder: Reminder, timeZone: string) {
+  const { start, end } = toDateTimeAt9am(reminder.days)
   const isRecurring = reminder.cat === 'Birthday'
 
   return {
     summary: reminder.title,
     description: reminder.sub,
-    start: { date },
-    end: { date: nextDay(date) },
+    start: { dateTime: start, timeZone },
+    end:   { dateTime: end,   timeZone },
     ...(isRecurring ? { recurrence: ['RRULE:FREQ=YEARLY'] } : {}),
     reminders: {
       useDefault: false,
       overrides: [
-        { method: 'email', minutes: 10080 },  // 7 days
-        { method: 'popup', minutes: 10080 },
-        { method: 'popup', minutes: 1440 },   // 1 day
+        { method: 'email',  minutes: 10080 }, // 7 days
+        { method: 'popup',  minutes: 10080 },
+        { method: 'popup',  minutes: 1440  }, // 1 day
+        { method: 'popup',  minutes: 60    }, // 1 hour
       ],
     },
     extendedProperties: {
@@ -51,11 +52,11 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Token expired — please reconnect Google' }, { status: 401 })
   }
 
-  const { reminders }: { reminders: Reminder[] } = await req.json()
-  const results: { id: string; ok: boolean; error?: string }[] = []
+  const { reminders, timeZone = 'UTC' }: { reminders: Reminder[]; timeZone?: string } = await req.json()
+  const results: { id: string; ok: boolean; gcalEventId?: string; error?: string }[] = []
 
   for (const reminder of reminders) {
-    const event = buildEvent(reminder)
+    const event = buildEvent(reminder, timeZone)
     const res = await fetch(CALENDAR_API, {
       method: 'POST',
       headers: {
@@ -66,7 +67,8 @@ export async function POST(req: NextRequest) {
     })
 
     if (res.ok) {
-      results.push({ id: reminder.id, ok: true })
+      const data = await res.json()
+      results.push({ id: reminder.id, ok: true, gcalEventId: data.id })
     } else {
       const err = await res.json().catch(() => ({}))
       results.push({ id: reminder.id, ok: false, error: err?.error?.message })
