@@ -12,8 +12,18 @@ const REL_COLOR: Record<Relationship, string> = { Family: T.a3, Friend: T.a1, Pa
 
 interface Props { editId?: string }
 
+function nextBirthday(dob: string): { iso: string; days: number } {
+  const d = new Date(dob + 'T12:00:00')
+  const today = new Date(); today.setHours(0, 0, 0, 0)
+  let next = new Date(today.getFullYear(), d.getMonth(), d.getDate())
+  if (next < today) next = new Date(today.getFullYear() + 1, d.getMonth(), d.getDate())
+  const days = Math.round((next.getTime() - today.getTime()) / 86400000)
+  const iso = `${next.getFullYear()}-${String(next.getMonth() + 1).padStart(2, '0')}-${String(next.getDate()).padStart(2, '0')}`
+  return { iso, days }
+}
+
 export function PersonSheet({ editId }: Props) {
-  const { closeSheet, people, addPerson, editPerson } = useApp()
+  const { closeSheet, people, addPerson, editPerson, addReminder } = useApp()
   const existing = editId ? people.find(p => p.id === editId) : undefined
 
   const [name, setName] = useState(existing?.name ?? '')
@@ -22,6 +32,7 @@ export function PersonSheet({ editId }: Props) {
   const [email, setEmail] = useState(existing?.email ?? '')
   const [dob, setDob] = useState(existing?.dob ?? '')
   const [notes, setNotes] = useState(existing?.notes ?? '')
+  const [addBdayReminder, setAddBdayReminder] = useState(false)
 
   const ok = name.trim().length > 0
 
@@ -33,16 +44,32 @@ export function PersonSheet({ editId }: Props) {
 
   const handleSave = () => {
     if (!ok) return
+    const trimmedName = name.trim()
     const person: Omit<Person, 'id'> = {
-      name: name.trim(), relationship: rel,
+      name: trimmedName, relationship: rel,
       phone: phone.trim() || undefined,
       email: email.trim() || undefined,
       dob: dob || undefined,
       notes: notes.trim() || undefined,
       reminders: existing?.reminders ?? [],
     }
-    if (editId) editPerson(editId, person)
-    else addPerson(person)
+    if (editId) {
+      editPerson(editId, person)
+    } else {
+      addPerson(person)
+      if (addBdayReminder && dob) {
+        const { iso, days } = nextBirthday(dob)
+        const display = new Date(iso + 'T12:00:00').toLocaleDateString('en-AU', { day: 'numeric', month: 'short' })
+        addReminder({
+          glyph: '🎂',
+          title: `${trimmedName}'s Birthday`,
+          sub: `${display} · yearly`,
+          days,
+          date: iso,
+          cat: 'Birthday',
+        })
+      }
+    }
   }
 
   return (
@@ -74,8 +101,33 @@ export function PersonSheet({ editId }: Props) {
 
         <div>
           <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1, textTransform: 'uppercase', color: T.dim, marginBottom: 6 }}>Date of birth</div>
-          <input type="date" value={dob} onChange={e => setDob(e.target.value)} style={inputStyle} />
+          <input type="date" value={dob} onChange={e => { setDob(e.target.value); if (e.target.value) setAddBdayReminder(true) }}
+            style={inputStyle} />
         </div>
+
+        {!editId && dob && (
+          <Press onClick={() => setAddBdayReminder(v => !v)} scale={0.98} style={{
+            display: 'flex', alignItems: 'center', gap: 12, padding: '12px 14px', borderRadius: 12,
+            background: addBdayReminder ? T.surface2 : 'transparent',
+            border: `1px solid ${addBdayReminder ? T.a1 + '66' : T.border}`,
+          }}>
+            <div style={{
+              width: 22, height: 22, borderRadius: 6, flexShrink: 0,
+              background: addBdayReminder ? T.a1 : 'transparent',
+              border: `2px solid ${addBdayReminder ? T.a1 : T.border}`,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              transition: 'all .15s ease',
+            }}>
+              {addBdayReminder && <span style={{ fontSize: 12, color: '#fff', lineHeight: 1 }}>✓</span>}
+            </div>
+            <div>
+              <div style={{ fontSize: 13.5, fontWeight: 600, color: addBdayReminder ? T.text : T.dim }}>
+                Add birthday reminder 🎂
+              </div>
+              <div style={{ fontSize: 11.5, color: T.dim, marginTop: 1 }}>Repeats yearly</div>
+            </div>
+          </Press>
+        )}
 
         <textarea value={notes} onChange={e => setNotes(e.target.value)}
           placeholder="Notes (optional)" rows={2}
