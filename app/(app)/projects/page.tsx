@@ -42,7 +42,14 @@ export default function Projects() {
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
         {projects.map(p => {
-          const projTasks = tasks.filter(t => t.projectId === p.id)
+          const projTasks = tasks
+            .filter(t => t.projectId === p.id)
+            .sort((a, b) => {
+              if (!a.due && !b.due) return 0
+              if (!a.due) return 1
+              if (!b.due) return -1
+              return a.due < b.due ? -1 : 1
+            })
           const done = projTasks.filter(t => t.status === 'Completed').length
           const pct = projTasks.length ? Math.round(done / projTasks.length * 100) : 0
           const [from, to] = pillarGrad(p.pillar)
