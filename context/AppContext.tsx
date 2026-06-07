@@ -1,18 +1,15 @@
 'use client'
-import { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react'
+import { createContext, useContext, useState, useEffect, useCallback, useRef, ReactNode } from 'react'
 import { useSession } from 'next-auth/react'
 import type { Habit, Reminder, Task, Project, SheetType, TaskStatus } from '@/lib/types'
 import type { Person, PersonReminder } from '@/lib/people'
-import {
-  SEED_HABITS, SEED_REMINDERS, SEED_TASKS, SEED_PROJECTS, SEED_PEOPLE,
-  loadStored, saveStored,
-} from '@/lib/seed'
 
 interface AppState {
   habits: Habit[]
   reminders: Reminder[]
   tasks: Task[]
   projects: Project[]
+  people: Person[]
   autoRemind: boolean
   webMode: boolean
   sheet: SheetType | null
@@ -40,7 +37,6 @@ interface AppState {
   addProject: (p: Omit<Project, 'id'>) => void
   editProject: (id: string, updates: Partial<Omit<Project, 'id'>>) => void
   deleteProject: (id: string) => void
-  people: Person[]
   addPerson: (p: Omit<Person, 'id'>) => void
   editPerson: (id: string, updates: Partial<Omit<Person, 'id'>>) => void
   deletePerson: (id: string) => void
@@ -55,251 +51,305 @@ interface AppState {
 
 const Ctx = createContext<AppState | null>(null)
 
-export function AppProvider({ children }: { children: ReactNode }) {
-  const { status: sessionStatus } = useSession()
+function post(path: string, body: unknown) {
+  return fetch(path, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
+}
+function del(path: string) {
+  return fetch(path, { method: 'DELETE' })
+}
 
-  const [habits, setHabits] = useState<Habit[]>(() => loadStored('habits', SEED_HABITS))
-  const [reminders, setReminders] = useState<Reminder[]>(() => loadStored('reminders', SEED_REMINDERS))
-  const [tasks, setTasks] = useState<Task[]>(() => loadStored('tasks', SEED_TASKS))
-  const [projects, setProjects] = useState<Project[]>(() => loadStored('projects', SEED_PROJECTS))
-  const [people, setPeople] = useState<Person[]>(() => loadStored('people', SEED_PEOPLE))
-  const [autoRemind, setAutoRemindState] = useState(() => loadStored<boolean>('autoRemind', true))
-  const [webMode, setWebModeState] = useState(() => loadStored<boolean>('webMode', false))
+export function AppProvider({ children }: { children: ReactNode }) {
+  const { data: session, status: sessionStatus } = useSession()
+  const authed = sessionStatus === 'authenticated'
+
+  const [habits, setHabits] = useState<Habit[]>([])
+  const [reminders, setReminders] = useState<Reminder[]>([])
+  const [tasks, setTasks] = useState<Task[]>([])
+  const [projects, setProjects] = useState<Project[]>([])
+  const [people, setPeople] = useState<Person[]>([])
+  const [autoRemind, setAutoRemindState] = useState(true)
+  const [webMode, setWebModeState] = useState(false)
   const [sheet, setSheet] = useState<SheetType | null>(null)
   const [toast, setToast] = useState<string | null>(null)
   const [dbLoading, setDbLoading] = useState(true)
-  const [dbLoaded, setDbLoaded] = useState(false)
   const [cloudSyncNeeded, setCloudSyncNeeded] = useState(false)
+
+  // Track latest task state for subtask saves without stale closure
+  const tasksRef = useRef(tasks)
+  useEffect(() => { tasksRef.current = tasks }, [tasks])
+
+  const peopleRef = useRef(people)
+  useEffect(() => { peopleRef.current = people }, [people])
 
   const flash = useCallback((msg: string) => {
     setToast(msg)
     setTimeout(() => setToast(null), 1900)
   }, [])
 
-  // Load from Supabase when signed in
+  // Load all data from Supabase on sign-in
   useEffect(() => {
     if (sessionStatus === 'loading') return
-    if (sessionStatus === 'unauthenticated') {
+    if (!authed) {
       setDbLoading(false)
-      setDbLoaded(true)
+      // Check if there's local data to migrate
+      const hasLocal = typeof window !== 'undefined' && !!localStorage.getItem('propel-data')
+      if (hasLocal) setCloudSyncNeeded(true)
       return
     }
+    setDbLoading(true)
     fetch('/api/db')
       .then(r => r.ok ? r.json() : null)
       .then(data => {
-        if (data && Object.keys(data).length > 0) {
-          if (data.habits) setHabits(data.habits)
-          if (data.reminders) setReminders(data.reminders)
-          if (data.tasks) setTasks(data.tasks)
-          if (data.projects) setProjects(data.projects)
-          if (data.people) setPeople(data.people)
-          if (data.autoRemind !== undefined) setAutoRemindState(data.autoRemind)
-          if (data.webMode !== undefined) setWebModeState(data.webMode)
-        } else {
-          // Supabase is empty — check if there's local data to migrate
-          const hasLocal = !!localStorage.getItem('propel-data')
-          if (hasLocal) setCloudSyncNeeded(true)
+        if (data) {
+          setHabits(data.habits ?? [])
+          setReminders(data.reminders ?? [])
+          setProjects(data.projects ?? [])
+          setTasks(data.tasks ?? [])
+          setPeople(data.people ?? [])
+          setAutoRemindState(data.autoRemind ?? true)
+          setWebModeState(data.webMode ?? false)
         }
       })
-      .catch(() => {}) // keep localStorage state on error
-      .finally(() => {
-        setDbLoading(false)
-        setDbLoaded(true)
-      })
-  }, [sessionStatus])
+      .catch(() => {})
+      .finally(() => setDbLoading(false))
+  }, [authed, sessionStatus])
 
-  // Save to Supabase (debounced 1.5s) or localStorage
-  useEffect(() => {
-    if (!dbLoaded) return
-    if (sessionStatus !== 'authenticated') {
-      saveStored({ habits, reminders, tasks, projects, people, autoRemind, webMode })
-      return
-    }
-    const timer = setTimeout(() => {
-      fetch('/api/db', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ habits, reminders, tasks, projects, people, autoRemind, webMode }),
-      }).catch(() => saveStored({ habits, reminders, tasks, projects, people, autoRemind, webMode }))
-    }, 1500)
-    return () => clearTimeout(timer)
-  }, [habits, reminders, tasks, projects, people, autoRemind, webMode, dbLoaded, sessionStatus])
-
+  // Migrate localStorage data to Supabase
   const syncToCloud = useCallback(async () => {
-    await fetch('/api/db', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ habits, reminders, tasks, projects, people, autoRemind, webMode }),
-    })
+    const raw = localStorage.getItem('propel-data')
+    if (!raw) return
+    await post('/api/db/migrate', JSON.parse(raw))
+    // Reload fresh from DB
+    const res = await fetch('/api/db')
+    if (res.ok) {
+      const data = await res.json()
+      setHabits(data.habits ?? [])
+      setReminders(data.reminders ?? [])
+      setProjects(data.projects ?? [])
+      setTasks(data.tasks ?? [])
+      setPeople(data.people ?? [])
+    }
     setCloudSyncNeeded(false)
-    flash('Data synced to cloud ✓')
-  }, [habits, reminders, tasks, projects, people, autoRemind, webMode, flash])
-
-  const addHabit = useCallback((h: Omit<Habit, 'id'>) => {
-    setHabits(hs => [...hs, { ...h, id: 'hab' + Date.now() }])
-    setSheet(null)
-    flash('Habit added')
+    flash('Data migrated to cloud ✓')
   }, [flash])
+
+  // ── Habits ────────────────────────────────────────────
+  const addHabit = useCallback((h: Omit<Habit, 'id'>) => {
+    const habit = { ...h, id: 'hab' + Date.now() }
+    setHabits(hs => [...hs, habit])
+    if (authed) post('/api/db/habits', habit)
+    setSheet(null); flash('Habit added')
+  }, [authed, flash])
 
   const editHabit = useCallback((id: string, updates: Partial<Omit<Habit, 'id'>>) => {
-    setHabits(hs => hs.map(h => h.id === id ? { ...h, ...updates } : h))
-    setSheet(null)
-    flash('Habit saved')
-  }, [flash])
+    setHabits(hs => hs.map(h => {
+      if (h.id !== id) return h
+      const updated = { ...h, ...updates }
+      if (authed) post('/api/db/habits', updated)
+      return updated
+    }))
+    setSheet(null); flash('Habit saved')
+  }, [authed, flash])
 
   const deleteHabit = useCallback((id: string) => {
     setHabits(hs => hs.filter(h => h.id !== id))
+    if (authed) del(`/api/db/habits/${id}`)
     flash('Habit removed')
-  }, [flash])
+  }, [authed, flash])
 
   const toggleHabit = useCallback((id: string) => {
-    setHabits(hs => hs.map(h =>
-      h.id === id ? { ...h, done: !h.done, streak: h.done ? Math.max(0, h.streak - 1) : h.streak + 1 } : h
-    ))
-  }, [])
+    setHabits(hs => hs.map(h => {
+      if (h.id !== id) return h
+      const updated = { ...h, done: !h.done, streak: h.done ? Math.max(0, h.streak - 1) : h.streak + 1 }
+      if (authed) post('/api/db/habits', updated)
+      return updated
+    }))
+  }, [authed])
 
+  // ── Reminders ─────────────────────────────────────────
   const addReminder = useCallback((r: Omit<Reminder, 'id'>) => {
-    setReminders(rs => [{ ...r, id: 'r' + Date.now() }, ...rs].sort((a, b) => a.days - b.days))
-    setSheet(null)
-    flash('Reminder added · syncing to Google Calendar…')
-  }, [flash])
+    const reminder = { ...r, id: 'r' + Date.now() }
+    setReminders(rs => [...rs, reminder].sort((a, b) => a.days - b.days))
+    if (authed) post('/api/db/reminders', reminder)
+    setSheet(null); flash('Reminder added · syncing to Google Calendar…')
+  }, [authed, flash])
 
   const editReminder = useCallback((id: string, updates: Partial<Omit<Reminder, 'id'>>) => {
-    setReminders(rs => rs
-      .map(r => r.id === id ? { ...r, ...updates, gcalEventId: undefined } : r)
-      .sort((a, b) => a.days - b.days)
-    )
-    setSheet(null)
-    flash('Reminder updated · syncing to Google Calendar…')
-  }, [flash])
+    setReminders(rs => rs.map(r => {
+      if (r.id !== id) return r
+      const updated = { ...r, ...updates, gcalEventId: undefined }
+      if (authed) post('/api/db/reminders', updated)
+      return updated
+    }).sort((a, b) => a.days - b.days))
+    setSheet(null); flash('Reminder updated · syncing to Google Calendar…')
+  }, [authed, flash])
 
   const deleteReminder = useCallback((id: string) => {
     setReminders(rs => rs.filter(r => r.id !== id))
+    if (authed) del(`/api/db/reminders/${id}`)
     flash('Reminder deleted')
-  }, [flash])
+  }, [authed, flash])
 
   const setReminderEventId = useCallback((id: string, gcalEventId: string) => {
-    setReminders(rs => rs.map(r => r.id === id ? { ...r, gcalEventId } : r))
-  }, [])
+    setReminders(rs => rs.map(r => {
+      if (r.id !== id) return r
+      const updated = { ...r, gcalEventId }
+      if (authed) post('/api/db/reminders', updated)
+      return updated
+    }))
+  }, [authed])
 
+  // ── Tasks ──────────────────────────────────────────────
   const addTask = useCallback((t: Omit<Task, 'id'>) => {
-    setTasks(ts => [{ ...t, id: 't' + Date.now() }, ...ts])
-    setSheet(null)
-    flash('Task added')
-  }, [flash])
+    const task = { ...t, id: 't' + Date.now() }
+    setTasks(ts => [task, ...ts])
+    if (authed) post('/api/db/tasks', task)
+    setSheet(null); flash('Task added')
+  }, [authed, flash])
 
   const editTask = useCallback((id: string, updates: Partial<Omit<Task, 'id'>>) => {
-    setTasks(ts => ts.map(t => t.id === id ? { ...t, ...updates } : t))
-    setSheet(null)
-    flash('Task saved')
-  }, [flash])
+    setTasks(ts => ts.map(t => {
+      if (t.id !== id) return t
+      const updated = { ...t, ...updates }
+      if (authed) post('/api/db/tasks', updated)
+      return updated
+    }))
+    setSheet(null); flash('Task saved')
+  }, [authed, flash])
 
   const deleteTask = useCallback((id: string) => {
     setTasks(ts => ts.filter(t => t.id !== id))
-    setSheet(null)
-    flash('Task deleted')
-  }, [flash])
+    if (authed) del(`/api/db/tasks/${id}`)
+    setSheet(null); flash('Task deleted')
+  }, [authed, flash])
 
-  const toggleSub = useCallback((taskId: string, i: number) => {
-    setTasks(ts => ts.map(t =>
-      t.id === taskId ? { ...t, subs: t.subs.map((s, j) => j === i ? { ...s, done: !s.done } : s) } : t
-    ))
-  }, [])
+  const updateTask = useCallback((id: string, fn: (t: Task) => Task) => {
+    setTasks(ts => ts.map(t => {
+      if (t.id !== id) return t
+      const updated = fn(t)
+      if (authed) post('/api/db/tasks', updated)
+      return updated
+    }))
+  }, [authed])
 
-  const setStatus = useCallback((taskId: string, status: TaskStatus) => {
-    setTasks(ts => ts.map(t => t.id === taskId ? { ...t, status } : t))
-  }, [])
+  const toggleSub = useCallback((taskId: string, i: number) =>
+    updateTask(taskId, t => ({ ...t, subs: t.subs.map((s, j) => j === i ? { ...s, done: !s.done } : s) }))
+  , [updateTask])
 
-  const setSubText = useCallback((taskId: string, i: number, text: string) => {
-    setTasks(ts => ts.map(t =>
-      t.id === taskId ? { ...t, subs: t.subs.map((s, j) => j === i ? { ...s, t: text } : s) } : t
-    ))
-  }, [])
+  const setStatus = useCallback((taskId: string, status: TaskStatus) =>
+    updateTask(taskId, t => ({ ...t, status }))
+  , [updateTask])
 
-  const setSubDue = useCallback((taskId: string, i: number, due: string) => {
-    setTasks(ts => ts.map(t =>
-      t.id === taskId ? { ...t, subs: t.subs.map((s, j) => j === i ? { ...s, due } : s) } : t
-    ))
-  }, [])
+  const setSubText = useCallback((taskId: string, i: number, text: string) =>
+    updateTask(taskId, t => ({ ...t, subs: t.subs.map((s, j) => j === i ? { ...s, t: text } : s) }))
+  , [updateTask])
 
-  const addSub = useCallback((taskId: string) => {
-    setTasks(ts => ts.map(t =>
-      t.id === taskId ? { ...t, subs: [...t.subs, { t: '', done: false }] } : t
-    ))
-  }, [])
+  const setSubDue = useCallback((taskId: string, i: number, due: string) =>
+    updateTask(taskId, t => ({ ...t, subs: t.subs.map((s, j) => j === i ? { ...s, due } : s) }))
+  , [updateTask])
 
-  const delSub = useCallback((taskId: string, i: number) => {
-    setTasks(ts => ts.map(t =>
-      t.id === taskId ? { ...t, subs: t.subs.filter((_, j) => j !== i) } : t
-    ))
-  }, [])
+  const addSub = useCallback((taskId: string) =>
+    updateTask(taskId, t => ({ ...t, subs: [...t.subs, { t: '', done: false }] }))
+  , [updateTask])
 
+  const delSub = useCallback((taskId: string, i: number) =>
+    updateTask(taskId, t => ({ ...t, subs: t.subs.filter((_, j) => j !== i) }))
+  , [updateTask])
+
+  // ── Projects ──────────────────────────────────────────
   const addProject = useCallback((p: Omit<Project, 'id'>) => {
-    setProjects(ps => [{ ...p, id: 'proj' + Date.now() }, ...ps])
-    setSheet(null)
-    flash('Project created')
-  }, [flash])
+    const project = { ...p, id: 'proj' + Date.now() }
+    setProjects(ps => [project, ...ps])
+    if (authed) post('/api/db/projects', project)
+    setSheet(null); flash('Project created')
+  }, [authed, flash])
 
   const editProject = useCallback((id: string, updates: Partial<Omit<Project, 'id'>>) => {
-    setProjects(ps => ps.map(p => p.id === id ? { ...p, ...updates } : p))
-    setSheet(null)
-    flash('Project saved')
-  }, [flash])
+    setProjects(ps => ps.map(p => {
+      if (p.id !== id) return p
+      const updated = { ...p, ...updates }
+      if (authed) post('/api/db/projects', updated)
+      return updated
+    }))
+    setSheet(null); flash('Project saved')
+  }, [authed, flash])
 
   const deleteProject = useCallback((id: string) => {
     setProjects(ps => ps.filter(p => p.id !== id))
     setTasks(ts => ts.map(t => t.projectId === id ? { ...t, projectId: undefined } : t))
-    setSheet(null)
-    flash('Project deleted')
-  }, [flash])
+    if (authed) del(`/api/db/projects/${id}`)
+    setSheet(null); flash('Project deleted')
+  }, [authed, flash])
 
+  // ── People ────────────────────────────────────────────
   const addPerson = useCallback((p: Omit<Person, 'id'>) => {
-    setPeople(ps => [{ ...p, id: 'per' + Date.now() }, ...ps])
-    setSheet(null)
-    flash('Contact added')
-  }, [flash])
+    const person = { ...p, id: 'per' + Date.now() }
+    setPeople(ps => [person, ...ps])
+    if (authed) post('/api/db/people', person)
+    setSheet(null); flash('Contact added')
+  }, [authed, flash])
 
   const editPerson = useCallback((id: string, updates: Partial<Omit<Person, 'id'>>) => {
-    setPeople(ps => ps.map(p => p.id === id ? { ...p, ...updates } : p))
-    setSheet(null)
-    flash('Contact saved')
-  }, [flash])
+    setPeople(ps => ps.map(p => {
+      if (p.id !== id) return p
+      const updated = { ...p, ...updates }
+      if (authed) post('/api/db/people', updated)
+      return updated
+    }))
+    setSheet(null); flash('Contact saved')
+  }, [authed, flash])
 
   const deletePerson = useCallback((id: string) => {
     setPeople(ps => ps.filter(p => p.id !== id))
-    setSheet(null)
-    flash('Contact deleted')
-  }, [flash])
+    if (authed) del(`/api/db/people/${id}`)
+    setSheet(null); flash('Contact deleted')
+  }, [authed, flash])
 
   const addPersonReminder = useCallback((personId: string, r: Omit<PersonReminder, 'id'>) => {
-    setPeople(ps => ps.map(p => p.id === personId
-      ? { ...p, reminders: [...p.reminders, { ...r, id: 'pr' + Date.now() }] }
-      : p
-    ))
-  }, [])
+    setPeople(ps => ps.map(p => {
+      if (p.id !== personId) return p
+      const updated = { ...p, reminders: [...p.reminders, { ...r, id: 'pr' + Date.now() }] }
+      if (authed) post('/api/db/people', updated)
+      return updated
+    }))
+  }, [authed])
 
   const deletePersonReminder = useCallback((personId: string, reminderId: string) => {
-    setPeople(ps => ps.map(p => p.id === personId
-      ? { ...p, reminders: p.reminders.filter(r => r.id !== reminderId) }
-      : p
-    ))
-  }, [])
+    setPeople(ps => ps.map(p => {
+      if (p.id !== personId) return p
+      const updated = { ...p, reminders: p.reminders.filter(r => r.id !== reminderId) }
+      if (authed) post('/api/db/people', updated)
+      return updated
+    }))
+  }, [authed])
 
-  const setAutoRemind = useCallback((v: boolean) => setAutoRemindState(v), [])
-  const setWebMode = useCallback((v: boolean) => setWebModeState(v), [])
+  // ── Settings ──────────────────────────────────────────
+  const setAutoRemind = useCallback((v: boolean) => {
+    setAutoRemindState(v)
+    if (authed) post('/api/db/settings', { autoRemind: v, webMode })
+  }, [authed, webMode])
+
+  const setWebMode = useCallback((v: boolean) => {
+    setWebModeState(v)
+    if (authed) post('/api/db/settings', { autoRemind, webMode: v })
+  }, [authed, autoRemind])
+
   const openSheet = useCallback((s: SheetType) => setSheet(s), [])
   const closeSheet = useCallback(() => setSheet(null), [])
 
+  // Suppress unused ref warnings
+  void tasksRef; void peopleRef
+
   return (
     <Ctx.Provider value={{
-      habits, reminders, tasks, projects, autoRemind, webMode, sheet, toast,
+      habits, reminders, tasks, projects, people, autoRemind, webMode, sheet, toast,
       dbLoading, cloudSyncNeeded, syncToCloud,
       addHabit, editHabit, deleteHabit, toggleHabit,
       addReminder, editReminder, deleteReminder, setReminderEventId,
       addTask, editTask, deleteTask,
       toggleSub, setStatus, setSubText, setSubDue, addSub, delSub,
       addProject, editProject, deleteProject,
-      people, addPerson, editPerson, deletePerson, addPersonReminder, deletePersonReminder,
+      addPerson, editPerson, deletePerson, addPersonReminder, deletePersonReminder,
       setAutoRemind, setWebMode, openSheet, closeSheet, flash,
     }}>
       {children}
