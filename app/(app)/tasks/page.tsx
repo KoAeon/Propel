@@ -51,7 +51,7 @@ export default function Tasks() {
           const project = t.projectId ? projects.find(pr => pr.id === t.projectId) : null
           return (
             <Card key={t.id} pad={14} radius={18}>
-              <Press onClick={() => openSheet({ type: 'task', id: t.id })} scale={0.99}>
+              <Press onClick={() => openSheet({ type: 'edit-task', id: t.id })} scale={0.99}>
                 <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ fontSize: 15, fontWeight: 700, color: T.text, letterSpacing: -.2, textDecoration: t.status === 'Completed' ? 'line-through' : 'none', opacity: t.status === 'Completed' ? .6 : 1 }}>
@@ -64,10 +64,6 @@ export default function Tasks() {
                     </div>
                   </div>
                   <div style={{ display: 'flex', gap: 5, flexShrink: 0 }}>
-                    <Press onClick={e => { e.stopPropagation(); openSheet({ type: 'edit-task', id: t.id }) }} scale={0.9}
-                      style={{ width: 28, height: 28, borderRadius: 8, background: T.surface2, border: `1px solid ${T.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                      <Icon name="pencil" size={13} color={T.dim} />
-                    </Press>
                     <Press onClick={e => { e.stopPropagation(); deleteTask(t.id) }} scale={0.9}
                       style={{ width: 28, height: 28, borderRadius: 8, background: T.surface2, border: `1px solid ${T.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                       <Icon name="trash" size={13} color={T.a3} />

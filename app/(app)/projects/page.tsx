@@ -113,7 +113,7 @@ export default function Projects() {
               {open && projTasks.length > 0 && (
                 <div style={{ marginTop: 10, display: 'flex', flexDirection: 'column', gap: 6 }}>
                   {projTasks.map(t => (
-                    <Press key={t.id} onClick={() => openSheet({ type: 'task', id: t.id })} scale={0.99}>
+                    <Press key={t.id} onClick={() => openSheet({ type: 'edit-task', id: t.id })} scale={0.99}>
                       <div style={{
                         display: 'flex', alignItems: 'center', gap: 10, padding: '9px 11px',
                         background: T.surface2, borderRadius: 12, border: `1px solid ${T.border}`,
