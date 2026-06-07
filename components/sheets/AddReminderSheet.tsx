@@ -11,7 +11,7 @@ import type { Reminder, ReminderFreq } from '@/lib/types'
 
 const FONT_BODY = "'Manrope', system-ui, sans-serif"
 const CATS = ['Renewal', 'Birthday', 'Financial', 'Health', 'Task'] as const
-const FREQS: ReminderFreq[] = ['Once', 'Weekly', 'Fortnightly', 'Monthly', 'Yearly']
+const FREQS: ReminderFreq[] = ['Once', 'Weekly', 'Fortnightly', 'Monthly', '6 Monthly', 'Yearly']
 
 function daysFromDate(iso: string): number {
   if (!iso) return 30

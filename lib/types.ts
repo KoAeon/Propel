@@ -9,7 +9,7 @@ export interface Habit {
   done: boolean
 }
 
-export type ReminderFreq = 'Once' | 'Weekly' | 'Fortnightly' | 'Monthly' | 'Yearly'
+export type ReminderFreq = 'Once' | 'Weekly' | 'Fortnightly' | 'Monthly' | '6 Monthly' | 'Yearly'
 
 export interface Reminder {
   id: string
