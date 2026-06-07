@@ -1,4 +1,5 @@
 'use client'
+import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useApp } from '@/context/AppContext'
 import { Card } from '@/components/ui/Card'
@@ -21,10 +22,21 @@ function formatTime(t: string) {
 export default function Tasks() {
   const router = useRouter()
   const { tasks, projects, setStatus, openSheet, deleteTask } = useApp()
+  const [showCompleted, setShowCompleted] = useState(false)
+
+  const completedCount = tasks.filter(t => t.status === 'Completed').length
+  const visibleTasks = [...tasks]
+    .filter(t => showCompleted || t.status !== 'Completed')
+    .sort((a, b) => {
+      if (!a.due && !b.due) return 0
+      if (!a.due) return 1
+      if (!b.due) return -1
+      return a.due < b.due ? -1 : a.due > b.due ? 1 : 0
+    })
 
   return (
     <div>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '4px 0 16px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '4px 0 12px' }}>
         <Press onClick={() => router.push('/modules')} scale={0.9} style={{ width: 38, height: 38, borderRadius: 12, background: T.surface, border: `1px solid ${T.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <Icon name="chevR" size={18} color={T.text} style={{ transform: 'scaleX(-1)' }} />
         </Press>
@@ -37,15 +49,22 @@ export default function Tasks() {
         </Press>
       </div>
 
+      {completedCount > 0 && (
+        <Press onClick={() => setShowCompleted(v => !v)} scale={0.96} style={{
+          display: 'inline-flex', alignItems: 'center', gap: 6, marginBottom: 12,
+          padding: '6px 12px', borderRadius: 999,
+          background: showCompleted ? T.surface2 : 'transparent',
+          border: `1px solid ${showCompleted ? T.good + '66' : T.border}`,
+        }}>
+          <div style={{ width: 8, height: 8, borderRadius: '50%', background: showCompleted ? T.good : T.dim }} />
+          <span style={{ fontSize: 12, fontWeight: 700, color: showCompleted ? T.good : T.dim }}>
+            {showCompleted ? 'Hide completed' : `${completedCount} completed`}
+          </span>
+        </Press>
+      )}
+
       <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-        {[...tasks]
-          .sort((a, b) => {
-            if (!a.due && !b.due) return 0
-            if (!a.due) return 1
-            if (!b.due) return -1
-            return a.due < b.due ? -1 : a.due > b.due ? 1 : 0
-          })
-          .map(t => {
+        {visibleTasks.map(t => {
           const dn = t.subs.filter(s => s.done).length
           const p = t.status === 'Completed' ? 100 : (t.subs.length ? Math.round(dn / t.subs.length * 100) : 0)
           const project = t.projectId ? projects.find(pr => pr.id === t.projectId) : null

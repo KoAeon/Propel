@@ -31,10 +31,14 @@ function pillarGrad(pillar: string) {
 export default function Projects() {
   const { projects, tasks, openSheet, deleteProject } = useApp()
   const [expanded, setExpanded] = useState<Record<string, boolean>>({})
+  const [showCompleted, setShowCompleted] = useState(false)
+
+  const completedCount = projects.filter(p => p.status === 'Completed').length
+  const visibleProjects = projects.filter(p => showCompleted || p.status !== 'Completed')
 
   return (
     <div>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '4px 0 16px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '4px 0 12px' }}>
         <div style={{ flex: 1 }}>
           <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1.3, textTransform: 'uppercase', color: T.dim }}>Organise your goals</div>
           <div style={{ fontFamily: FONT_DISPLAY, fontSize: 24, fontWeight: 700, letterSpacing: -.5, color: T.text, marginTop: 3 }}>Projects</div>
@@ -45,8 +49,22 @@ export default function Projects() {
         </Press>
       </div>
 
+      {completedCount > 0 && (
+        <Press onClick={() => setShowCompleted(v => !v)} scale={0.96} style={{
+          display: 'inline-flex', alignItems: 'center', gap: 6, marginBottom: 12,
+          padding: '6px 12px', borderRadius: 999,
+          background: showCompleted ? T.surface2 : 'transparent',
+          border: `1px solid ${showCompleted ? T.good + '66' : T.border}`,
+        }}>
+          <div style={{ width: 8, height: 8, borderRadius: '50%', background: showCompleted ? T.good : T.dim }} />
+          <span style={{ fontSize: 12, fontWeight: 700, color: showCompleted ? T.good : T.dim }}>
+            {showCompleted ? 'Hide completed' : `${completedCount} completed`}
+          </span>
+        </Press>
+      )}
+
       <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-        {projects.map(p => {
+        {visibleProjects.map(p => {
           const projTasks = tasks
             .filter(t => t.projectId === p.id)
             .sort((a, b) => {
@@ -144,9 +162,9 @@ export default function Projects() {
             </Card>
           )
         })}
-        {projects.length === 0 && (
+        {visibleProjects.length === 0 && (
           <div style={{ textAlign: 'center', padding: '60px 0', color: T.faint, fontSize: 14, fontFamily: FONT_BODY }}>
-            No projects yet — tap + to create one
+            {projects.length === 0 ? 'No projects yet — tap + to create one' : 'All projects completed'}
           </div>
         )}
       </div>
