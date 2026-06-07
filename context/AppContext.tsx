@@ -11,6 +11,7 @@ interface AppState {
   reminders: Reminder[]
   tasks: Task[]
   autoRemind: boolean
+  webMode: boolean
   sheet: SheetType | null
   toast: string | null
   toggleHabit: (id: string) => void
@@ -25,6 +26,7 @@ interface AppState {
   addSub: (taskId: string) => void
   delSub: (taskId: string, i: number) => void
   setAutoRemind: (v: boolean) => void
+  setWebMode: (v: boolean) => void
   openSheet: (s: SheetType) => void
   closeSheet: () => void
   flash: (msg: string) => void
@@ -37,10 +39,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [reminders, setReminders] = useState<Reminder[]>(() => loadStored('reminders', SEED_REMINDERS))
   const [tasks, setTasks] = useState<Task[]>(() => loadStored('tasks', SEED_TASKS))
   const [autoRemind, setAutoRemindState] = useState(() => loadStored<boolean>('autoRemind', true))
+  const [webMode, setWebModeState] = useState(() => loadStored<boolean>('webMode', false))
   const [sheet, setSheet] = useState<SheetType | null>(null)
   const [toast, setToast] = useState<string | null>(null)
 
-  useEffect(() => { saveStored({ habits, reminders, tasks, autoRemind }) }, [habits, reminders, tasks, autoRemind])
+  useEffect(() => { saveStored({ habits, reminders, tasks, autoRemind, webMode }) }, [habits, reminders, tasks, autoRemind, webMode])
 
   const flash = useCallback((msg: string) => {
     setToast(msg)
@@ -112,15 +115,16 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const setAutoRemind = useCallback((v: boolean) => setAutoRemindState(v), [])
+  const setWebMode = useCallback((v: boolean) => setWebModeState(v), [])
   const openSheet = useCallback((s: SheetType) => setSheet(s), [])
   const closeSheet = useCallback(() => setSheet(null), [])
 
   return (
     <Ctx.Provider value={{
-      habits, reminders, tasks, autoRemind, sheet, toast,
+      habits, reminders, tasks, autoRemind, webMode, sheet, toast,
       toggleHabit, addReminder, editReminder, deleteReminder, setReminderEventId,
       toggleSub, setStatus, setSubText, setSubDue, addSub, delSub,
-      setAutoRemind, openSheet, closeSheet, flash,
+      setAutoRemind, setWebMode, openSheet, closeSheet, flash,
     }}>
       {children}
     </Ctx.Provider>
