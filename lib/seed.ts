@@ -11,14 +11,7 @@ export const SEED_HABITS: Habit[] = [
   { id: 'journal', glyph: '✍️', from: '#6B8AFF', to: '#8FA9FF', name: 'Evening Journal', meta: 'Gratitude', streak: 12, done: false },
 ]
 
-export const SEED_REMINDERS: Reminder[] = [
-  { id: 'zara',   glyph: '🎂', title: "Zara's Birthday",        sub: 'Wed, Jun 11 · turning 12',  days: 4,  date: '2026-06-11', cat: 'Birthday'  },
-  { id: 'car',    glyph: '🚗', title: 'Car Registration',        sub: 'Renewal due Jun 14',        days: 7,  date: '2026-06-14', cat: 'Renewal'   },
-  { id: 'ins',    glyph: '🏠', title: 'Home Insurance',          sub: 'Renewal · Jun 28',          days: 21, date: '2026-06-28', cat: 'Renewal'   },
-  { id: 'dental', glyph: '🦷', title: 'Dental Check-up',         sub: '6-month · Jun 30',          days: 23, date: '2026-06-30', cat: 'Health'    },
-  { id: 'super',  glyph: '📈', title: 'Super Contribution',      sub: 'Before EOFY · Jun 30',      days: 23, date: '2026-06-30', cat: 'Financial' },
-  { id: 'loan',   glyph: '🏦', title: 'Investment Loan Review',  sub: 'Compare rates · Sep 1',     days: 86, date: '2026-09-01', cat: 'Financial' },
-]
+export const SEED_REMINDERS: Reminder[] = []
 
 export const SEED_PROJECTS: Project[] = [
   { id: 'proj1', title: "Zara's Birthday Party", desc: 'Backyard theme, ~10 friends. Jun 11.', status: 'Active', pillar: 'Family & Connection' },
@@ -143,7 +136,7 @@ export function daysUntil(str: string): number | null {
   return Math.round((d.getTime() - today.getTime()) / 86400000)
 }
 
-const STORE_KEY = 'propel-proto-v4'
+const STORE_KEY = 'propel-proto-v5'
 
 export function loadStored<T>(key: string, fallback: T): T {
   if (typeof window === 'undefined') return fallback
