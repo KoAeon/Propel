@@ -9,18 +9,18 @@ import { T } from '@/lib/theme'
 const FONT_DISPLAY = "'Space Grotesk', 'Manrope', system-ui, sans-serif"
 
 const MODULES = [
-  { icon: 'flame', label: 'Habits', dest: '/habits', live: true },
-  { icon: 'bell', label: 'Reminders', dest: '/reminders', live: true },
-  { icon: 'grid', label: 'Tasks', dest: '/tasks', live: true },
-  { icon: 'target', label: 'Goals & Vision', dest: null, live: false },
-  { icon: 'heart', label: 'Health', dest: null, live: false },
-  { icon: 'wallet', label: 'Wealth', dest: null, live: false },
-  { icon: 'leaf', label: 'Peacefulness', dest: null, live: false },
-  { icon: 'book', label: 'Study', dest: null, live: false },
-  { icon: 'gift', label: 'Good News', dest: null, live: false },
-  { icon: 'user', label: 'People', dest: null, live: false },
-  { icon: 'doc', label: 'Diary', dest: null, live: false },
-  { icon: 'bulb', label: 'Ideas', dest: null, live: false },
+  { icon: 'flame',   label: 'Habits',       dest: '/habits',    live: true  },
+  { icon: 'bell',    label: 'Reminders',    dest: '/reminders', live: true  },
+  { icon: 'doc',     label: 'Tasks',        dest: '/tasks',     live: true  },
+  { icon: 'folder',  label: 'Projects',     dest: '/projects',  live: true  },
+  { icon: 'user',    label: 'People',       dest: '/people',    live: true  },
+  { icon: 'target',  label: 'Goals & Vision', dest: null,       live: false },
+  { icon: 'heart',   label: 'Health',       dest: null,         live: false },
+  { icon: 'wallet',  label: 'Wealth',       dest: null,         live: false },
+  { icon: 'leaf',    label: 'Peacefulness', dest: null,         live: false },
+  { icon: 'book',    label: 'Study',        dest: null,         live: false },
+  { icon: 'gift',    label: 'Good News',    dest: null,         live: false },
+  { icon: 'bulb',    label: 'Ideas',        dest: null,         live: false },
 ] as const
 
 export default function Modules() {

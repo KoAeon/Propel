@@ -11,6 +11,8 @@ import { AddReminderSheet } from '@/components/sheets/AddReminderSheet'
 import { TaskDetailSheet } from '@/components/tasks/TaskDetailSheet'
 import { Sheet } from '@/components/sheets/Sheet'
 import { AutoCalendarSync } from '@/components/AutoCalendarSync'
+import { TaskSheet } from '@/components/tasks/TaskSheet'
+import { ProjectSheet } from '@/components/projects/ProjectSheet'
 import { Icon } from '@/components/ui/Icon'
 import { Press } from '@/components/ui/Press'
 import { T } from '@/lib/theme'
@@ -25,7 +27,11 @@ function Sheets() {
       {sheet?.type === 'quick' && <QuickAdd />}
       {sheet?.type === 'reminder' && <AddReminderSheet />}
       {sheet?.type === 'edit-reminder' && <AddReminderSheet editId={(sheet as { type: 'edit-reminder'; id: string }).id} />}
+      {sheet?.type === 'add-task' && <TaskSheet projectId={(sheet as { type: 'add-task'; projectId?: string }).projectId} />}
+      {sheet?.type === 'edit-task' && <TaskSheet editId={(sheet as { type: 'edit-task'; id: string }).id} />}
       {sheet?.type === 'task' && openTask && <TaskDetailSheet task={openTask} />}
+      {sheet?.type === 'add-project' && <ProjectSheet />}
+      {sheet?.type === 'edit-project' && <ProjectSheet editId={(sheet as { type: 'edit-project'; id: string }).id} />}
       {sheet?.type === 'info' && (
         <Sheet title="Heads up" onClose={closeSheet}>
           <div style={{ fontSize: 14, color: T.dim, lineHeight: 1.6, paddingBottom: 8 }}>

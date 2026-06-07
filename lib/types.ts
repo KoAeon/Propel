@@ -38,12 +38,27 @@ export interface Task {
   due: string
   priority: TaskPriority
   pillar: string
+  projectId?: string
   subs: Subtask[]
+}
+
+export type ProjectStatus = 'Active' | 'On Hold' | 'Completed'
+
+export interface Project {
+  id: string
+  title: string
+  desc: string
+  status: ProjectStatus
+  pillar: string
 }
 
 export type SheetType =
   | { type: 'quick' }
   | { type: 'reminder' }
   | { type: 'edit-reminder'; id: string }
+  | { type: 'add-task'; projectId?: string }
   | { type: 'task'; id: string }
+  | { type: 'edit-task'; id: string }
+  | { type: 'add-project' }
+  | { type: 'edit-project'; id: string }
   | { type: 'info'; message: string }

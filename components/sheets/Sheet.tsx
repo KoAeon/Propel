@@ -9,9 +9,10 @@ interface SheetProps {
   title: string
   children: ReactNode
   onClose: () => void
+  right?: ReactNode
 }
 
-export function Sheet({ title, children, onClose }: SheetProps) {
+export function Sheet({ title, children, onClose, right }: SheetProps) {
   return (
     <div
       onClick={onClose}
@@ -38,16 +39,13 @@ export function Sheet({ title, children, onClose }: SheetProps) {
         <div style={{ width: 40, height: 5, borderRadius: 3, background: T.border, margin: '0 auto 14px' }} />
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
           <span style={{ fontFamily: FONT_DISPLAY, fontSize: 16, fontWeight: 700, color: T.text }}>{title}</span>
-          <Press
-            onClick={onClose} scale={0.9}
-            style={{
-              width: 30, height: 30, borderRadius: 15, background: T.surface2,
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              color: T.dim, fontSize: 17,
-            }}
-          >
-            ✕
-          </Press>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            {right}
+            <Press onClick={onClose} scale={0.9}
+              style={{ width: 30, height: 30, borderRadius: 15, background: T.surface2, display: 'flex', alignItems: 'center', justifyContent: 'center', color: T.dim, fontSize: 17 }}>
+              ✕
+            </Press>
+          </div>
         </div>
         {children}
       </div>

@@ -1,4 +1,4 @@
-import type { Habit, Reminder, Task } from './types'
+import type { Habit, Reminder, Task, Project } from './types'
 
 export const SEED_HABITS: Habit[] = [
   { id: 'med', glyph: '🧘', from: '#7C6BFF', to: '#A98BFF', name: 'Morning Meditation', meta: '10 min', streak: 21, done: true },
@@ -19,35 +19,41 @@ export const SEED_REMINDERS: Reminder[] = [
   { id: 'loan',   glyph: '🏦', title: 'Investment Loan Review',  sub: 'Compare rates · Sep 1',     days: 86, date: '2026-09-01', cat: 'Financial' },
 ]
 
+export const SEED_PROJECTS: Project[] = [
+  { id: 'proj1', title: "Zara's Birthday Party", desc: 'Backyard theme, ~10 friends. Jun 11.', status: 'Active', pillar: 'Family & Connection' },
+  { id: 'proj2', title: 'FY24-25 Tax Return', desc: 'Lodge with accountant before Jun 30.', status: 'Active', pillar: 'Financial Freedom' },
+  { id: 'proj3', title: 'Reach Goal Weight 70kg', desc: 'Down from 74.2kg by Dec 31.', status: 'Active', pillar: 'Health & Vitality' },
+]
+
 export const SEED_TASKS: Task[] = [
   {
-    id: 't1',
+    id: 't1', projectId: 'proj1',
     title: "Plan Zara's birthday party",
     desc: 'Turning 12 on Jun 11. Backyard theme, ~10 friends. Book the cake, sort decorations and a small gift. Keep it relaxed.',
-    status: 'Started', due: 'Jun 11', priority: 'High', pillar: 'Family & Connection',
+    status: 'Started', due: '2026-06-11', priority: 'High', pillar: 'Family & Connection',
     subs: [
-      { t: 'Book the cake', done: true, due: 'Jun 8' },
-      { t: 'Send invites', done: false, due: 'Jun 7' },
+      { t: 'Book the cake', done: true, due: '2026-06-08' },
+      { t: 'Send invites', done: false, due: '2026-06-07' },
       { t: 'Buy decorations', done: false },
-      { t: 'Pick up gift', done: false, due: 'Jun 10' },
+      { t: 'Pick up gift', done: false, due: '2026-06-10' },
     ],
   },
   {
-    id: 't2',
+    id: 't2', projectId: 'proj2',
     title: 'Lodge FY24–25 tax return',
     desc: 'Gather receipts, investment property statements and super contributions. Review with accountant before lodging.',
-    status: 'Waiting', due: 'Jun 30', priority: 'High', pillar: 'Financial Freedom',
+    status: 'Waiting', due: '2026-06-30', priority: 'High', pillar: 'Financial Freedom',
     subs: [
       { t: 'Collect receipts', done: true },
-      { t: 'Property statements', done: false, due: 'Jun 20' },
-      { t: 'Send to accountant', done: false, due: 'Jun 25' },
+      { t: 'Property statements', done: false, due: '2026-06-20' },
+      { t: 'Send to accountant', done: false, due: '2026-06-25' },
     ],
   },
   {
-    id: 't3',
+    id: 't3', projectId: 'proj3',
     title: 'Reach goal weight 70 kg',
     desc: 'Down from 74.2kg. Stay on the no-sugar days, 10k steps, and 4 exercise days a week.',
-    status: 'Started', due: 'Dec 31', priority: 'Med', pillar: 'Health & Vitality',
+    status: 'Started', due: '2026-12-31', priority: 'Med', pillar: 'Health & Vitality',
     subs: [
       { t: 'Hit 10k steps daily', done: false },
       { t: '4 workouts / week', done: true },
@@ -58,7 +64,7 @@ export const SEED_TASKS: Task[] = [
     id: 't4',
     title: 'Review investment loan rates',
     desc: 'Compare current rate against market. Call broker about refinancing the Marina Court loan.',
-    status: 'On Hold', due: 'Sep 1', priority: 'Med', pillar: 'Financial Freedom',
+    status: 'On Hold', due: '2026-09-01', priority: 'Med', pillar: 'Financial Freedom',
     subs: [
       { t: 'Compare 3 lenders', done: false },
       { t: 'Call broker', done: false },
@@ -68,7 +74,7 @@ export const SEED_TASKS: Task[] = [
     id: 't5',
     title: 'Finish Spanish A2 course',
     desc: '10 minutes every 2 days. Aim to finish the A2 module before the Gold Coast trip.',
-    status: 'Started', due: 'Aug 30', priority: 'Low', pillar: 'Growth & Learning',
+    status: 'Started', due: '2026-08-30', priority: 'Low', pillar: 'Growth & Learning',
     subs: [
       { t: 'Unit 4', done: true },
       { t: 'Unit 5', done: false },
@@ -96,6 +102,15 @@ export const CAT_GLYPH: Record<string, string> = {
   Health: '🩺',
 }
 
+export function formatDue(due: string): string {
+  if (!due) return ''
+  if (due.match(/^\d{4}-\d{2}-\d{2}$/)) {
+    const d = new Date(due + 'T12:00:00')
+    return d.toLocaleDateString('en-AU', { month: 'short', day: 'numeric' })
+  }
+  return due
+}
+
 const MONTHS = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec']
 
 export function daysUntil(str: string): number | null {
@@ -109,7 +124,7 @@ export function daysUntil(str: string): number | null {
   return Math.round((d.getTime() - today.getTime()) / 86400000)
 }
 
-const STORE_KEY = 'propel-proto-v3'
+const STORE_KEY = 'propel-proto-v4'
 
 export function loadStored<T>(key: string, fallback: T): T {
   if (typeof window === 'undefined') return fallback
