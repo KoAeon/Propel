@@ -5,6 +5,18 @@ import type { Reminder } from '@/lib/types'
 
 const CALENDAR_API = 'https://www.googleapis.com/calendar/v3/calendars/primary/events'
 
+async function findExistingEvent(accessToken: string, propelId: string): Promise<string | null> {
+  const url = new URL(CALENDAR_API)
+  url.searchParams.set('privateExtendedProperty', `propelId=${propelId}`)
+  url.searchParams.set('maxResults', '1')
+  const res = await fetch(url.toString(), {
+    headers: { Authorization: `Bearer ${accessToken}` },
+  })
+  if (!res.ok) return null
+  const data = await res.json()
+  return data.items?.[0]?.id ?? null
+}
+
 function buildEvent(reminder: Reminder, timeZone: string) {
   let dateStr: string
   if (reminder.date) {
@@ -21,7 +33,7 @@ function buildEvent(reminder: Reminder, timeZone: string) {
   const [h, m] = startTime.split(':').map(Number)
   const endH = String(h + 1).padStart(2, '0')
   const start = `${dateStr}T${startTime}:00`
-  const end = `${dateStr}T${endH}:${String(m).padStart(2, '0')}:00`
+  const end   = `${dateStr}T${endH}:${String(m).padStart(2, '0')}:00`
   const isRecurring = reminder.cat === 'Birthday'
 
   return {
@@ -33,10 +45,10 @@ function buildEvent(reminder: Reminder, timeZone: string) {
     reminders: {
       useDefault: false,
       overrides: [
-        { method: 'email',  minutes: 10080 }, // 7 days
+        { method: 'email',  minutes: 10080 },
         { method: 'popup',  minutes: 10080 },
-        { method: 'popup',  minutes: 1440  }, // 1 day
-        { method: 'popup',  minutes: 60    }, // 1 hour
+        { method: 'popup',  minutes: 1440  },
+        { method: 'popup',  minutes: 60    },
       ],
     },
     extendedProperties: {
@@ -56,9 +68,16 @@ export async function POST(req: NextRequest) {
   }
 
   const { reminders, timeZone = 'UTC' }: { reminders: Reminder[]; timeZone?: string } = await req.json()
-  const results: { id: string; ok: boolean; gcalEventId?: string; error?: string }[] = []
+  const results: { id: string; ok: boolean; gcalEventId?: string; skipped?: boolean; error?: string }[] = []
 
   for (const reminder of reminders) {
+    // Check if event already exists in Google Calendar
+    const existingId = await findExistingEvent(session.accessToken, reminder.id)
+    if (existingId) {
+      results.push({ id: reminder.id, ok: true, gcalEventId: existingId, skipped: true })
+      continue
+    }
+
     const event = buildEvent(reminder, timeZone)
     const res = await fetch(CALENDAR_API, {
       method: 'POST',
@@ -78,8 +97,9 @@ export async function POST(req: NextRequest) {
     }
   }
 
+  const created = results.filter(r => r.ok && !r.skipped).length
   const allOk = results.every(r => r.ok)
-  return NextResponse.json({ results, synced: results.filter(r => r.ok).length }, {
+  return NextResponse.json({ results, synced: created }, {
     status: allOk ? 200 : 207,
   })
 }
