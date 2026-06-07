@@ -56,6 +56,8 @@ export type SheetType =
   | { type: 'quick' }
   | { type: 'reminder' }
   | { type: 'edit-reminder'; id: string }
+  | { type: 'add-habit' }
+  | { type: 'edit-habit'; id: string }
   | { type: 'add-task'; projectId?: string }
   | { type: 'task'; id: string }
   | { type: 'edit-task'; id: string }

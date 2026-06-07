@@ -16,6 +16,9 @@ interface AppState {
   webMode: boolean
   sheet: SheetType | null
   toast: string | null
+  addHabit: (h: Omit<Habit, 'id'>) => void
+  editHabit: (id: string, updates: Partial<Omit<Habit, 'id'>>) => void
+  deleteHabit: (id: string) => void
   toggleHabit: (id: string) => void
   addReminder: (r: Omit<Reminder, 'id'>) => void
   editReminder: (id: string, r: Partial<Omit<Reminder, 'id'>>) => void
@@ -67,6 +70,23 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setToast(msg)
     setTimeout(() => setToast(null), 1900)
   }, [])
+
+  const addHabit = useCallback((h: Omit<Habit, 'id'>) => {
+    setHabits(hs => [...hs, { ...h, id: 'hab' + Date.now() }])
+    setSheet(null)
+    flash('Habit added')
+  }, [flash])
+
+  const editHabit = useCallback((id: string, updates: Partial<Omit<Habit, 'id'>>) => {
+    setHabits(hs => hs.map(h => h.id === id ? { ...h, ...updates } : h))
+    setSheet(null)
+    flash('Habit saved')
+  }, [flash])
+
+  const deleteHabit = useCallback((id: string) => {
+    setHabits(hs => hs.filter(h => h.id !== id))
+    flash('Habit removed')
+  }, [flash])
 
   const toggleHabit = useCallback((id: string) => {
     setHabits(hs => hs.map(h =>
@@ -209,7 +229,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   return (
     <Ctx.Provider value={{
       habits, reminders, tasks, projects, autoRemind, webMode, sheet, toast,
-      toggleHabit,
+      addHabit, editHabit, deleteHabit, toggleHabit,
       addReminder, editReminder, deleteReminder, setReminderEventId,
       addTask, editTask, deleteTask,
       toggleSub, setStatus, setSubText, setSubDue, addSub, delSub,

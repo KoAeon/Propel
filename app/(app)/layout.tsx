@@ -11,6 +11,7 @@ import { AddReminderSheet } from '@/components/sheets/AddReminderSheet'
 import { TaskDetailSheet } from '@/components/tasks/TaskDetailSheet'
 import { Sheet } from '@/components/sheets/Sheet'
 import { AutoCalendarSync } from '@/components/AutoCalendarSync'
+import { HabitSheet } from '@/components/habits/HabitSheet'
 import { TaskSheet } from '@/components/tasks/TaskSheet'
 import { ProjectSheet } from '@/components/projects/ProjectSheet'
 import { PersonSheet } from '@/components/people/PersonSheet'
@@ -27,6 +28,8 @@ function Sheets() {
   return (
     <>
       {sheet?.type === 'quick' && <QuickAdd />}
+      {sheet?.type === 'add-habit' && <HabitSheet />}
+      {sheet?.type === 'edit-habit' && <HabitSheet editId={(sheet as { type: 'edit-habit'; id: string }).id} />}
       {sheet?.type === 'reminder' && <AddReminderSheet />}
       {sheet?.type === 'edit-reminder' && <AddReminderSheet editId={(sheet as { type: 'edit-reminder'; id: string }).id} />}
       {sheet?.type === 'add-task' && <TaskSheet projectId={(sheet as { type: 'add-task'; projectId?: string }).projectId} />}
