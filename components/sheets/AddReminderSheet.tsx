@@ -20,10 +20,15 @@ function daysFromDate(iso: string): number {
   return Math.round((target.getTime() - today.getTime()) / 86400000)
 }
 
-function formatDisplayDate(iso: string): string {
+function formatDisplayDate(iso: string, time: string): string {
   if (!iso) return 'No date set'
   const d = new Date(iso + 'T12:00:00')
-  return d.toLocaleDateString('en-AU', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })
+  const datePart = d.toLocaleDateString('en-AU', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })
+  if (!time) return `${datePart} · 9:00am`
+  const [h, m] = time.split(':').map(Number)
+  const suffix = h >= 12 ? 'pm' : 'am'
+  const h12 = h % 12 || 12
+  return `${datePart} · ${h12}:${String(m).padStart(2, '0')}${suffix}`
 }
 
 function todayISO(): string {
@@ -41,6 +46,7 @@ export function AddReminderSheet({ editId }: Props) {
 
   const [title, setTitle] = useState(existing?.title ?? '')
   const [date, setDate] = useState(existing?.date ?? '')
+  const [time, setTime] = useState(existing?.time ?? '')
   const [cat, setCat] = useState<typeof CATS[number]>(existing?.cat ?? 'Renewal')
   const [auto, setAuto] = useState(true)
 
@@ -56,13 +62,14 @@ export function AddReminderSheet({ editId }: Props) {
 
   const handleSave = () => {
     if (!ok) return
-    const sub = date ? formatDisplayDate(date) : 'No date set'
+    const sub = formatDisplayDate(date, time)
     const reminder: Omit<Reminder, 'id'> = {
       glyph: CAT_GLYPH[cat],
       title: title.trim(),
       sub,
       days: days ?? 365,
       date: date || undefined,
+      time: time || undefined,
       cat,
     }
     if (editId) {
@@ -92,16 +99,25 @@ export function AddReminderSheet({ editId }: Props) {
           <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1.3, textTransform: 'uppercase', color: T.dim }}>
             When
           </div>
-          <input
-            type="date"
-            value={date}
-            min={todayISO()}
-            onChange={e => setDate(e.target.value)}
-            style={{ ...inputStyle, marginTop: 8 }}
-          />
+          <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
+            <input
+              type="date"
+              value={date}
+              min={todayISO()}
+              onChange={e => setDate(e.target.value)}
+              style={{ ...inputStyle, flex: 1 }}
+            />
+            <input
+              type="time"
+              value={time}
+              onChange={e => setTime(e.target.value)}
+              style={{ ...inputStyle, width: 120, flex: 'none' }}
+            />
+          </div>
           {date && days !== null && (
             <div style={{ fontSize: 12, color: days <= 7 ? T.a3 : T.good, marginTop: 6, fontWeight: 600 }}>
               {days === 0 ? 'Today' : days === 1 ? 'Tomorrow' : `${days} days away`}
+              {!time && <span style={{ color: T.dim, fontWeight: 400 }}> · defaults to 9:00am</span>}
             </div>
           )}
         </div>

@@ -17,8 +17,11 @@ function buildEvent(reminder: Reminder, timeZone: string) {
     const dd = String(d.getDate()).padStart(2, '0')
     dateStr = `${yyyy}-${mm}-${dd}`
   }
-  const start = `${dateStr}T09:00:00`
-  const end = `${dateStr}T10:00:00`
+  const startTime = reminder.time || '09:00'
+  const [h, m] = startTime.split(':').map(Number)
+  const endH = String(h + 1).padStart(2, '0')
+  const start = `${dateStr}T${startTime}:00`
+  const end = `${dateStr}T${endH}:${String(m).padStart(2, '0')}:00`
   const isRecurring = reminder.cat === 'Birthday'
 
   return {
