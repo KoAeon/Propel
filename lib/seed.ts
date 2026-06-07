@@ -2,13 +2,13 @@ import type { Habit, Reminder, Task, Project } from './types'
 import type { Person } from './people'
 
 export const SEED_HABITS: Habit[] = [
-  { id: 'med', glyph: '🧘', from: '#7C6BFF', to: '#A98BFF', name: 'Morning Meditation', meta: '10 min', streak: 21, done: true },
-  { id: 'water', glyph: '💧', from: '#3FA9F5', to: '#5BD0E8', name: 'Drink 2L Water', meta: 'Daily', streak: 14, done: true },
-  { id: 'steps', glyph: '👟', from: '#5B8DEF', to: '#9B6BFF', name: '10,000 Steps', meta: '7,420 today', streak: 6, done: false },
-  { id: 'read', glyph: '📖', from: '#4FB477', to: '#7FD89B', name: 'Read 5 Pages', meta: 'Atomic Habits', streak: 9, done: false },
-  { id: 'lang', glyph: '🗣️', from: '#E0716B', to: '#FF9D8A', name: 'Language · 10 min', meta: 'Spanish 🇪🇸', streak: 4, done: false },
-  { id: 'sugar', glyph: '🚫', from: '#E0A93B', to: '#FF9D4D', name: 'No Sugar Day', meta: 'Diet goal', streak: 3, done: false },
-  { id: 'journal', glyph: '✍️', from: '#6B8AFF', to: '#8FA9FF', name: 'Evening Journal', meta: 'Gratitude', streak: 12, done: false },
+  { id: 'med', glyph: '🧘', from: '#7C6BFF', to: '#A98BFF', name: 'Morning Meditation', meta: '10 min', streak: 0, done: false },
+  { id: 'water', glyph: '💧', from: '#3FA9F5', to: '#5BD0E8', name: 'Drink 2L Water', meta: 'Daily', streak: 0, done: false },
+  { id: 'steps', glyph: '👟', from: '#5B8DEF', to: '#9B6BFF', name: '10,000 Steps', meta: '7,420 today', streak: 0, done: false },
+  { id: 'read', glyph: '📖', from: '#4FB477', to: '#7FD89B', name: 'Read 5 Pages', meta: 'Atomic Habits', streak: 0, done: false },
+  { id: 'lang', glyph: '🗣️', from: '#E0716B', to: '#FF9D8A', name: 'Language · 10 min', meta: 'Spanish 🇪🇸', streak: 0, done: false },
+  { id: 'sugar', glyph: '🚫', from: '#E0A93B', to: '#FF9D4D', name: 'No Sugar Day', meta: 'Diet goal', streak: 0, done: false },
+  { id: 'journal', glyph: '✍️', from: '#6B8AFF', to: '#8FA9FF', name: 'Evening Journal', meta: 'Gratitude', streak: 0, done: false },
 ]
 
 export const SEED_REMINDERS: Reminder[] = [
@@ -81,7 +81,7 @@ export function daysUntil(str: string): number | null {
   return Math.round((d.getTime() - today.getTime()) / 86400000)
 }
 
-const STORE_KEY = 'propel-proto-v7'
+const STORE_KEY = 'propel-proto-v8'
 
 export function loadStored<T>(key: string, fallback: T): T {
   if (typeof window === 'undefined') return fallback
