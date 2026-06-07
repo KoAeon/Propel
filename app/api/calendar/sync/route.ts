@@ -3,10 +3,13 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import type { Reminder } from '@/lib/types'
 
-const CALENDAR_API = 'https://www.googleapis.com/calendar/v3/calendars/primary/events'
+function calendarEventsUrl(calendarId: string) {
+  return `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(calendarId)}/events`
+}
 
-async function findExistingEvent(accessToken: string, propelId: string): Promise<string | null> {
-  const url = new URL(CALENDAR_API)
+async function findExistingEvent(accessToken: string, propelId: string, calendarId: string): Promise<string | null> {
+  const base = calendarEventsUrl(calendarId)
+  const url = new URL(base)
   url.searchParams.set('privateExtendedProperty', `propelId=${propelId}`)
   url.searchParams.set('maxResults', '1')
   const res = await fetch(url.toString(), {
@@ -71,15 +74,18 @@ export async function POST(req: NextRequest) {
   const results: { id: string; ok: boolean; gcalEventId?: string; skipped?: boolean; error?: string }[] = []
 
   for (const reminder of reminders) {
+    const calId = reminder.calendarId || 'primary'
+    const calUrl = calendarEventsUrl(calId)
+
     // Check if event already exists in Google Calendar
-    const existingId = await findExistingEvent(session.accessToken, reminder.id)
+    const existingId = await findExistingEvent(session.accessToken, reminder.id, calId)
     if (existingId) {
       results.push({ id: reminder.id, ok: true, gcalEventId: existingId, skipped: true })
       continue
     }
 
     const event = buildEvent(reminder, timeZone)
-    const res = await fetch(CALENDAR_API, {
+    const res = await fetch(calUrl, {
       method: 'POST',
       headers: {
         Authorization: `Bearer ${session.accessToken}`,

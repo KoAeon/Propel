@@ -20,6 +20,7 @@ export interface Reminder {
   date?: string
   time?: string
   freq?: ReminderFreq
+  calendarId?: string
   cat: 'Renewal' | 'Birthday' | 'Financial' | 'Health' | 'Task'
   gcalEventId?: string
 }
