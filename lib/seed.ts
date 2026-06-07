@@ -13,69 +13,9 @@ export const SEED_HABITS: Habit[] = [
 
 export const SEED_REMINDERS: Reminder[] = []
 
-export const SEED_PROJECTS: Project[] = [
-  { id: 'proj1', title: "Zara's Birthday Party", desc: 'Backyard theme, ~10 friends. Jun 11.', status: 'Active', pillar: 'Family & Connection' },
-  { id: 'proj2', title: 'FY24-25 Tax Return', desc: 'Lodge with accountant before Jun 30.', status: 'Active', pillar: 'Financial Freedom' },
-  { id: 'proj3', title: 'Reach Goal Weight 70kg', desc: 'Down from 74.2kg by Dec 31.', status: 'Active', pillar: 'Health & Vitality' },
-]
+export const SEED_PROJECTS: Project[] = []
 
-export const SEED_TASKS: Task[] = [
-  {
-    id: 't1', projectId: 'proj1',
-    title: "Plan Zara's birthday party",
-    desc: 'Turning 12 on Jun 11. Backyard theme, ~10 friends. Book the cake, sort decorations and a small gift. Keep it relaxed.',
-    status: 'Started', due: '2026-06-11', priority: 'High', pillar: 'Family & Connection',
-    subs: [
-      { t: 'Book the cake', done: true, due: '2026-06-08' },
-      { t: 'Send invites', done: false, due: '2026-06-07' },
-      { t: 'Buy decorations', done: false },
-      { t: 'Pick up gift', done: false, due: '2026-06-10' },
-    ],
-  },
-  {
-    id: 't2', projectId: 'proj2',
-    title: 'Lodge FY24–25 tax return',
-    desc: 'Gather receipts, investment property statements and super contributions. Review with accountant before lodging.',
-    status: 'Waiting', due: '2026-06-30', priority: 'High', pillar: 'Financial Freedom',
-    subs: [
-      { t: 'Collect receipts', done: true },
-      { t: 'Property statements', done: false, due: '2026-06-20' },
-      { t: 'Send to accountant', done: false, due: '2026-06-25' },
-    ],
-  },
-  {
-    id: 't3', projectId: 'proj3',
-    title: 'Reach goal weight 70 kg',
-    desc: 'Down from 74.2kg. Stay on the no-sugar days, 10k steps, and 4 exercise days a week.',
-    status: 'Started', due: '2026-12-31', priority: 'Med', pillar: 'Health & Vitality',
-    subs: [
-      { t: 'Hit 10k steps daily', done: false },
-      { t: '4 workouts / week', done: true },
-      { t: 'No-sugar weekdays', done: false },
-    ],
-  },
-  {
-    id: 't4',
-    title: 'Review investment loan rates',
-    desc: 'Compare current rate against market. Call broker about refinancing the Marina Court loan.',
-    status: 'On Hold', due: '2026-09-01', priority: 'Med', pillar: 'Financial Freedom',
-    subs: [
-      { t: 'Compare 3 lenders', done: false },
-      { t: 'Call broker', done: false },
-    ],
-  },
-  {
-    id: 't5',
-    title: 'Finish Spanish A2 course',
-    desc: '10 minutes every 2 days. Aim to finish the A2 module before the Gold Coast trip.',
-    status: 'Started', due: '2026-08-30', priority: 'Low', pillar: 'Growth & Learning',
-    subs: [
-      { t: 'Unit 4', done: true },
-      { t: 'Unit 5', done: false },
-      { t: 'A2 review test', done: false },
-    ],
-  },
-]
+export const SEED_TASKS: Task[] = []
 
 export const SEED_PEOPLE: Person[] = [
   {
@@ -136,7 +76,7 @@ export function daysUntil(str: string): number | null {
   return Math.round((d.getTime() - today.getTime()) / 86400000)
 }
 
-const STORE_KEY = 'propel-proto-v5'
+const STORE_KEY = 'propel-proto-v6'
 
 export function loadStored<T>(key: string, fallback: T): T {
   if (typeof window === 'undefined') return fallback
