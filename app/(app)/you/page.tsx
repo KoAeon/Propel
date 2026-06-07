@@ -1,9 +1,12 @@
 'use client'
+import { useState } from 'react'
+import { useSession } from 'next-auth/react'
 import { useApp } from '@/context/AppContext'
 import { Card } from '@/components/ui/Card'
 import { Ring } from '@/components/ui/Ring'
 import { Avatar } from '@/components/ui/Avatar'
 import { GoogleCalendarConnect } from '@/components/GoogleCalendarConnect'
+import { Press } from '@/components/ui/Press'
 import { T } from '@/lib/theme'
 
 const FONT_DISPLAY = "'Space Grotesk', 'Manrope', system-ui, sans-serif"
@@ -19,7 +22,9 @@ function daysUntilBirthday(dob: string): { date: string; days: number } {
 }
 
 export default function You() {
-  const { habits, people } = useApp()
+  const { habits, people, cloudSyncNeeded, syncToCloud, dbLoading } = useApp()
+  const { status: sessionStatus } = useSession()
+  const [syncing, setSyncing] = useState(false)
   const bestStreak = habits.length ? Math.max(...habits.map(h => h.streak)) : 0
   const birthdays = people
     .filter(p => p.dob)
@@ -47,6 +52,44 @@ export default function You() {
           </div>
         </div>
       </Card>
+
+      {/* Cloud sync status */}
+      <div style={{ fontFamily: FONT_DISPLAY, fontSize: 17, fontWeight: 700, color: T.text, letterSpacing: -.3, margin: '22px 2px 12px' }}>
+        Cloud Sync
+      </div>
+      <Card pad={14} radius={16} style={{ marginBottom: cloudSyncNeeded ? 8 : 0 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          <div style={{ fontSize: 22 }}>{sessionStatus === 'authenticated' ? '☁️' : '💾'}</div>
+          <div style={{ flex: 1 }}>
+            <div style={{ fontSize: 14, fontWeight: 700, color: T.text }}>
+              {sessionStatus === 'authenticated' ? 'Supabase · Active' : 'Local storage only'}
+            </div>
+            <div style={{ fontSize: 12, color: T.dim, marginTop: 1 }}>
+              {sessionStatus === 'authenticated'
+                ? dbLoading ? 'Loading data…' : 'Data syncs across all your devices'
+                : 'Sign in with Google to enable cloud sync'}
+            </div>
+          </div>
+          <div style={{ width: 10, height: 10, borderRadius: '50%', background: sessionStatus === 'authenticated' ? T.good : T.warn, flexShrink: 0 }} />
+        </div>
+      </Card>
+      {cloudSyncNeeded && (
+        <Press onClick={async () => { setSyncing(true); await syncToCloud(); setSyncing(false) }} scale={0.97}>
+          <Card pad={14} radius={16} style={{ background: T.grad, boxShadow: T.glow }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+              <div style={{ fontSize: 20 }}>⬆️</div>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: 14, fontWeight: 700, color: '#fff' }}>
+                  {syncing ? 'Uploading…' : 'Upload device data to cloud'}
+                </div>
+                <div style={{ fontSize: 12, color: 'rgba(255,255,255,.7)', marginTop: 1 }}>
+                  Migrate your local data to Supabase
+                </div>
+              </div>
+            </div>
+          </Card>
+        </Press>
+      )}
 
       {/* Google Calendar — live integration */}
       <div style={{ fontFamily: FONT_DISPLAY, fontSize: 17, fontWeight: 700, color: T.text, letterSpacing: -.3, margin: '22px 2px 12px' }}>

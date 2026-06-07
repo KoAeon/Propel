@@ -1,5 +1,6 @@
 'use client'
 import { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react'
+import { useSession } from 'next-auth/react'
 import type { Habit, Reminder, Task, Project, SheetType, TaskStatus } from '@/lib/types'
 import type { Person, PersonReminder } from '@/lib/people'
 import {
@@ -16,6 +17,9 @@ interface AppState {
   webMode: boolean
   sheet: SheetType | null
   toast: string | null
+  dbLoading: boolean
+  cloudSyncNeeded: boolean
+  syncToCloud: () => Promise<void>
   addHabit: (h: Omit<Habit, 'id'>) => void
   editHabit: (id: string, updates: Partial<Omit<Habit, 'id'>>) => void
   deleteHabit: (id: string) => void
@@ -52,6 +56,8 @@ interface AppState {
 const Ctx = createContext<AppState | null>(null)
 
 export function AppProvider({ children }: { children: ReactNode }) {
+  const { status: sessionStatus } = useSession()
+
   const [habits, setHabits] = useState<Habit[]>(() => loadStored('habits', SEED_HABITS))
   const [reminders, setReminders] = useState<Reminder[]>(() => loadStored('reminders', SEED_REMINDERS))
   const [tasks, setTasks] = useState<Task[]>(() => loadStored('tasks', SEED_TASKS))
@@ -61,15 +67,73 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [webMode, setWebModeState] = useState(() => loadStored<boolean>('webMode', false))
   const [sheet, setSheet] = useState<SheetType | null>(null)
   const [toast, setToast] = useState<string | null>(null)
-
-  useEffect(() => {
-    saveStored({ habits, reminders, tasks, projects, people, autoRemind, webMode })
-  }, [habits, reminders, tasks, projects, people, autoRemind, webMode])
+  const [dbLoading, setDbLoading] = useState(true)
+  const [dbLoaded, setDbLoaded] = useState(false)
+  const [cloudSyncNeeded, setCloudSyncNeeded] = useState(false)
 
   const flash = useCallback((msg: string) => {
     setToast(msg)
     setTimeout(() => setToast(null), 1900)
   }, [])
+
+  // Load from Supabase when signed in
+  useEffect(() => {
+    if (sessionStatus === 'loading') return
+    if (sessionStatus === 'unauthenticated') {
+      setDbLoading(false)
+      setDbLoaded(true)
+      return
+    }
+    fetch('/api/db')
+      .then(r => r.ok ? r.json() : null)
+      .then(data => {
+        if (data && Object.keys(data).length > 0) {
+          if (data.habits) setHabits(data.habits)
+          if (data.reminders) setReminders(data.reminders)
+          if (data.tasks) setTasks(data.tasks)
+          if (data.projects) setProjects(data.projects)
+          if (data.people) setPeople(data.people)
+          if (data.autoRemind !== undefined) setAutoRemindState(data.autoRemind)
+          if (data.webMode !== undefined) setWebModeState(data.webMode)
+        } else {
+          // Supabase is empty — check if there's local data to migrate
+          const hasLocal = !!localStorage.getItem('propel-data')
+          if (hasLocal) setCloudSyncNeeded(true)
+        }
+      })
+      .catch(() => {}) // keep localStorage state on error
+      .finally(() => {
+        setDbLoading(false)
+        setDbLoaded(true)
+      })
+  }, [sessionStatus])
+
+  // Save to Supabase (debounced 1.5s) or localStorage
+  useEffect(() => {
+    if (!dbLoaded) return
+    if (sessionStatus !== 'authenticated') {
+      saveStored({ habits, reminders, tasks, projects, people, autoRemind, webMode })
+      return
+    }
+    const timer = setTimeout(() => {
+      fetch('/api/db', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ habits, reminders, tasks, projects, people, autoRemind, webMode }),
+      }).catch(() => saveStored({ habits, reminders, tasks, projects, people, autoRemind, webMode }))
+    }, 1500)
+    return () => clearTimeout(timer)
+  }, [habits, reminders, tasks, projects, people, autoRemind, webMode, dbLoaded, sessionStatus])
+
+  const syncToCloud = useCallback(async () => {
+    await fetch('/api/db', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ habits, reminders, tasks, projects, people, autoRemind, webMode }),
+    })
+    setCloudSyncNeeded(false)
+    flash('Data synced to cloud ✓')
+  }, [habits, reminders, tasks, projects, people, autoRemind, webMode, flash])
 
   const addHabit = useCallback((h: Omit<Habit, 'id'>) => {
     setHabits(hs => [...hs, { ...h, id: 'hab' + Date.now() }])
@@ -229,6 +293,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   return (
     <Ctx.Provider value={{
       habits, reminders, tasks, projects, autoRemind, webMode, sheet, toast,
+      dbLoading, cloudSyncNeeded, syncToCloud,
       addHabit, editHabit, deleteHabit, toggleHabit,
       addReminder, editReminder, deleteReminder, setReminderEventId,
       addTask, editTask, deleteTask,
