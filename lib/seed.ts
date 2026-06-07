@@ -1,4 +1,5 @@
 import type { Habit, Reminder, Task, Project } from './types'
+import type { Person } from './people'
 
 export const SEED_HABITS: Habit[] = [
   { id: 'med', glyph: '🧘', from: '#7C6BFF', to: '#A98BFF', name: 'Morning Meditation', meta: '10 min', streak: 21, done: true },
@@ -80,6 +81,24 @@ export const SEED_TASKS: Task[] = [
       { t: 'Unit 5', done: false },
       { t: 'A2 review test', done: false },
     ],
+  },
+]
+
+export const SEED_PEOPLE: Person[] = [
+  {
+    id: 'p_zara', name: 'Zara', relationship: 'Family',
+    dob: '2014-06-11', notes: 'Loves art and music. Turning 12.',
+    reminders: [{ id: 'pr1', label: "Zara's Birthday", date: '2026-06-11', freq: 'Yearly' }],
+  },
+  {
+    id: 'p_maddie', name: 'Maddie', relationship: 'Family',
+    dob: '1990-03-10', notes: '',
+    reminders: [{ id: 'pr2', label: "Maddie's Birthday", date: '2027-03-10', freq: 'Yearly' }],
+  },
+  {
+    id: 'p_kiki', name: 'Kiki', relationship: 'Family',
+    dob: '2010-12-28', notes: '',
+    reminders: [{ id: 'pr3', label: "Kiki's Birthday", date: '2026-12-28', freq: 'Yearly' }],
   },
 ]
 

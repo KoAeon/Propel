@@ -61,4 +61,7 @@ export type SheetType =
   | { type: 'edit-task'; id: string }
   | { type: 'add-project' }
   | { type: 'edit-project'; id: string }
+  | { type: 'add-person' }
+  | { type: 'edit-person'; id: string }
+  | { type: 'add-person-reminder'; personId: string }
   | { type: 'info'; message: string }

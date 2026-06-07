@@ -1,8 +1,9 @@
 'use client'
 import { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react'
 import type { Habit, Reminder, Task, Project, SheetType, TaskStatus } from '@/lib/types'
+import type { Person, PersonReminder } from '@/lib/people'
 import {
-  SEED_HABITS, SEED_REMINDERS, SEED_TASKS, SEED_PROJECTS,
+  SEED_HABITS, SEED_REMINDERS, SEED_TASKS, SEED_PROJECTS, SEED_PEOPLE,
   loadStored, saveStored,
 } from '@/lib/seed'
 
@@ -32,6 +33,12 @@ interface AppState {
   addProject: (p: Omit<Project, 'id'>) => void
   editProject: (id: string, updates: Partial<Omit<Project, 'id'>>) => void
   deleteProject: (id: string) => void
+  people: Person[]
+  addPerson: (p: Omit<Person, 'id'>) => void
+  editPerson: (id: string, updates: Partial<Omit<Person, 'id'>>) => void
+  deletePerson: (id: string) => void
+  addPersonReminder: (personId: string, r: Omit<PersonReminder, 'id'>) => void
+  deletePersonReminder: (personId: string, reminderId: string) => void
   setAutoRemind: (v: boolean) => void
   setWebMode: (v: boolean) => void
   openSheet: (s: SheetType) => void
@@ -46,14 +53,15 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [reminders, setReminders] = useState<Reminder[]>(() => loadStored('reminders', SEED_REMINDERS))
   const [tasks, setTasks] = useState<Task[]>(() => loadStored('tasks', SEED_TASKS))
   const [projects, setProjects] = useState<Project[]>(() => loadStored('projects', SEED_PROJECTS))
+  const [people, setPeople] = useState<Person[]>(() => loadStored('people', SEED_PEOPLE))
   const [autoRemind, setAutoRemindState] = useState(() => loadStored<boolean>('autoRemind', true))
   const [webMode, setWebModeState] = useState(() => loadStored<boolean>('webMode', false))
   const [sheet, setSheet] = useState<SheetType | null>(null)
   const [toast, setToast] = useState<string | null>(null)
 
   useEffect(() => {
-    saveStored({ habits, reminders, tasks, projects, autoRemind, webMode })
-  }, [habits, reminders, tasks, projects, autoRemind, webMode])
+    saveStored({ habits, reminders, tasks, projects, people, autoRemind, webMode })
+  }, [habits, reminders, tasks, projects, people, autoRemind, webMode])
 
   const flash = useCallback((msg: string) => {
     setToast(msg)
@@ -161,6 +169,38 @@ export function AppProvider({ children }: { children: ReactNode }) {
     flash('Project deleted')
   }, [flash])
 
+  const addPerson = useCallback((p: Omit<Person, 'id'>) => {
+    setPeople(ps => [{ ...p, id: 'per' + Date.now() }, ...ps])
+    setSheet(null)
+    flash('Contact added')
+  }, [flash])
+
+  const editPerson = useCallback((id: string, updates: Partial<Omit<Person, 'id'>>) => {
+    setPeople(ps => ps.map(p => p.id === id ? { ...p, ...updates } : p))
+    setSheet(null)
+    flash('Contact saved')
+  }, [flash])
+
+  const deletePerson = useCallback((id: string) => {
+    setPeople(ps => ps.filter(p => p.id !== id))
+    setSheet(null)
+    flash('Contact deleted')
+  }, [flash])
+
+  const addPersonReminder = useCallback((personId: string, r: Omit<PersonReminder, 'id'>) => {
+    setPeople(ps => ps.map(p => p.id === personId
+      ? { ...p, reminders: [...p.reminders, { ...r, id: 'pr' + Date.now() }] }
+      : p
+    ))
+  }, [])
+
+  const deletePersonReminder = useCallback((personId: string, reminderId: string) => {
+    setPeople(ps => ps.map(p => p.id === personId
+      ? { ...p, reminders: p.reminders.filter(r => r.id !== reminderId) }
+      : p
+    ))
+  }, [])
+
   const setAutoRemind = useCallback((v: boolean) => setAutoRemindState(v), [])
   const setWebMode = useCallback((v: boolean) => setWebModeState(v), [])
   const openSheet = useCallback((s: SheetType) => setSheet(s), [])
@@ -174,6 +214,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       addTask, editTask, deleteTask,
       toggleSub, setStatus, setSubText, setSubDue, addSub, delSub,
       addProject, editProject, deleteProject,
+      people, addPerson, editPerson, deletePerson, addPersonReminder, deletePersonReminder,
       setAutoRemind, setWebMode, openSheet, closeSheet, flash,
     }}>
       {children}
