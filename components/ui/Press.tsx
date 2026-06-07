@@ -1,8 +1,8 @@
 'use client'
-import { useState, type ReactNode, type CSSProperties } from 'react'
+import { useState, type ReactNode, type CSSProperties, type MouseEvent } from 'react'
 
 interface PressProps {
-  onClick?: () => void
+  onClick?: (e: MouseEvent) => void
   children: ReactNode
   style?: CSSProperties
   scale?: number
