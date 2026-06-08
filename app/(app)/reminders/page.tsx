@@ -12,16 +12,28 @@ import { REMINDER_CATS } from '@/lib/seed'
 
 const FONT_DISPLAY = "'Space Grotesk', 'Manrope', system-ui, sans-serif"
 
+function livedays(r: { date?: string; days: number }): number {
+  if (!r.date) return r.days
+  const target = new Date(r.date + 'T12:00:00')
+  const today = new Date(); today.setHours(0, 0, 0, 0)
+  return Math.round((target.getTime() - today.getTime()) / 86400000)
+}
+
 export default function Reminders() {
   const router = useRouter()
   const { reminders, autoRemind, setAutoRemind, openSheet, deleteReminder } = useApp()
   const [filter, setFilter] = useState('All')
 
-  const list = reminders.filter(r => filter === 'All' || r.cat === filter)
+  const list = reminders
+    .filter(r => filter === 'All' || r.cat === filter)
+    .map(r => ({ ...r, days: livedays(r) }))
+    .sort((a, b) => a.days !== b.days ? a.days - b.days : (a.time ?? '09:00') < (b.time ?? '09:00') ? -1 : 1)
+
   const groups = [
-    ['This Week', list.filter(r => r.days <= 9)],
+    ['This Week', list.filter(r => r.days >= 0 && r.days <= 9)],
     ['This Month', list.filter(r => r.days > 9 && r.days <= 31)],
     ['Later', list.filter(r => r.days > 31)],
+    ['Overdue', list.filter(r => r.days < 0)],
   ] as [string, typeof list][]
 
   return (
@@ -79,7 +91,7 @@ export default function Reminders() {
               <div key={r.id} style={{
                 display: 'flex', alignItems: 'center', gap: 12, padding: '12px 13px',
                 background: r.days <= 9 ? T.surface2 : T.surface,
-                border: `1px solid ${r.days <= 9 ? T.a3 + '55' : T.border}`,
+                border: `1px solid ${r.days < 0 ? T.a3 + '88' : r.days <= 9 ? T.a3 + '55' : T.border}`,
                 borderRadius: 16,
               }}>
                 <Tile glyph={r.glyph} from={T.a1} to={T.a2} size={40} radius={12} />
@@ -101,9 +113,11 @@ export default function Reminders() {
                 </div>
 
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
-                  <div style={{ textAlign: 'center', minWidth: 46, padding: '6px 9px', borderRadius: 12, background: T.surface, border: `1px solid ${T.border}` }}>
-                    <div style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 17, color: r.days <= 9 ? T.a3 : T.text, lineHeight: 1 }}>{r.days}</div>
-                    <div style={{ fontSize: 9, fontWeight: 700, color: T.dim, marginTop: 2 }}>DAYS</div>
+                  <div style={{ textAlign: 'center', minWidth: 46, padding: '6px 9px', borderRadius: 12, background: T.surface, border: `1px solid ${r.days < 0 ? T.a3 + '66' : T.border}` }}>
+                    <div style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: r.days < 0 ? 11 : 17, color: r.days < 0 ? T.a3 : r.days <= 9 ? T.warn : T.text, lineHeight: 1 }}>
+                      {r.days < 0 ? 'PAST' : r.days}
+                    </div>
+                    <div style={{ fontSize: 9, fontWeight: 700, color: T.dim, marginTop: 2 }}>{r.days < 0 ? 'DUE' : 'DAYS'}</div>
                   </div>
                   <div style={{ display: 'flex', gap: 4 }}>
                     <Press
