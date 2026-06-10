@@ -1,5 +1,6 @@
 'use client'
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
+import { createPortal } from 'react-dom'
 import { Press } from '@/components/ui/Press'
 import { Icon } from '@/components/ui/Icon'
 import { T } from '@/lib/theme'
@@ -17,7 +18,10 @@ interface StatusDropdownProps {
 export function StatusDropdown({ value, onChange, small }: StatusDropdownProps) {
   const [open, setOpen] = useState(false)
   const [pos, setPos] = useState({ top: 0, left: 0 })
+  const [mounted, setMounted] = useState(false)
   const btnRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => setMounted(true), [])
 
   const handleOpen = () => {
     if (btnRef.current) {
@@ -26,6 +30,47 @@ export function StatusDropdown({ value, onChange, small }: StatusDropdownProps) 
     }
     setOpen(o => !o)
   }
+
+  const menu = open && mounted ? createPortal(
+    <>
+      <div
+        onClick={e => { e.stopPropagation(); setOpen(false) }}
+        style={{ position: 'fixed', inset: 0, zIndex: 9990 }}
+      />
+      <div
+        onClick={e => e.stopPropagation()}
+        style={{
+          position: 'fixed',
+          top: pos.top,
+          left: pos.left,
+          zIndex: 9991,
+          background: '#1b1726',
+          border: `1px solid ${T.border}`,
+          borderRadius: 12, padding: 5, minWidth: 156,
+          boxShadow: '0 14px 40px rgba(0,0,0,.7)',
+          fontFamily: FONT_BODY,
+        }}
+      >
+        {STATUS_ORDER.map(s => (
+          <Press
+            key={s}
+            onClick={() => { onChange(s as TaskStatus); setOpen(false) }}
+            scale={0.98}
+            style={{
+              display: 'flex', alignItems: 'center', gap: 9, padding: '8px 9px',
+              borderRadius: 8,
+              background: s === value ? T.surface2 : 'transparent',
+            }}
+          >
+            <span style={{ width: 9, height: 9, borderRadius: 3, background: STATUS_COLOR[s], flexShrink: 0 }} />
+            <span style={{ fontSize: 13, fontWeight: s === value ? 700 : 600, color: T.text }}>{s}</span>
+            {s === value && <Icon name="check" size={13} color={T.a1} sw={2.6} style={{ marginLeft: 'auto' }} />}
+          </Press>
+        ))}
+      </div>
+    </>,
+    document.body
+  ) : null
 
   return (
     <div style={{ position: 'relative', display: 'inline-block', fontFamily: FONT_BODY }}>
@@ -51,45 +96,7 @@ export function StatusDropdown({ value, onChange, small }: StatusDropdownProps) 
           </svg>
         </Press>
       </div>
-
-      {open && (
-        <>
-          <div
-            onClick={e => { e.stopPropagation(); setOpen(false) }}
-            style={{ position: 'fixed', inset: 0, zIndex: 990 }}
-          />
-          <div
-            onClick={e => e.stopPropagation()}
-            style={{
-              position: 'fixed',
-              top: pos.top,
-              left: pos.left,
-              zIndex: 991,
-              background: '#1b1726',
-              border: `1px solid ${T.border}`,
-              borderRadius: 12, padding: 5, minWidth: 156,
-              boxShadow: '0 14px 40px rgba(0,0,0,.7)',
-            }}
-          >
-            {STATUS_ORDER.map(s => (
-              <Press
-                key={s}
-                onClick={() => { onChange(s as TaskStatus); setOpen(false) }}
-                scale={0.98}
-                style={{
-                  display: 'flex', alignItems: 'center', gap: 9, padding: '8px 9px',
-                  borderRadius: 8,
-                  background: s === value ? T.surface2 : 'transparent',
-                }}
-              >
-                <span style={{ width: 9, height: 9, borderRadius: 3, background: STATUS_COLOR[s], flexShrink: 0 }} />
-                <span style={{ fontSize: 13, fontWeight: s === value ? 700 : 600, color: T.text }}>{s}</span>
-                {s === value && <Icon name="check" size={13} color={T.a1} sw={2.6} style={{ marginLeft: 'auto' }} />}
-              </Press>
-            ))}
-          </div>
-        </>
-      )}
+      {menu}
     </div>
   )
 }
