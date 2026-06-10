@@ -44,6 +44,12 @@ export default function Home() {
     return { label, count, isToday, isFuture }
   })
 
+  const pastDays = days.filter(d => !d.isFuture)
+  const weekDone = pastDays.reduce((sum, d) => sum + (d.count ?? 0), 0)
+  const avgScore = habits.length && pastDays.length
+    ? Math.round(pastDays.reduce((sum, d) => sum + (d.count ?? 0), 0) / (habits.length * pastDays.length) * 100)
+    : 0
+
   return (
     <div>
       {/* Header */}
@@ -167,9 +173,9 @@ export default function Home() {
       </div>
       <div style={{ display: 'flex', gap: 9 }}>
         {[
-          ['42', 'Habits Done', T.a1],
+          [String(weekDone), 'Habits Done', T.a1],
           [String(bestStreak), 'Best Streak', T.a2],
-          ['94%', 'Avg Score', T.a3],
+          [avgScore + '%', 'Avg Score', T.a3],
         ].map(([val, label, col]) => (
           <Card key={label} pad={14} radius={18} style={{ flex: 1, textAlign: 'center' }}>
             <div style={{ fontFamily: FONT_DISPLAY, fontSize: 26, fontWeight: 700, fontStyle: 'italic', color: col }}>{val}</div>

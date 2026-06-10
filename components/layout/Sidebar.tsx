@@ -15,6 +15,7 @@ const NAV = [
   { icon: 'doc',     label: 'Tasks',     path: '/tasks' },
   { icon: 'folder',  label: 'Projects',  path: '/projects' },
   { icon: 'user',    label: 'People',    path: '/people' },
+  { icon: 'gift',    label: 'Good News', path: '/good-news' },
   { icon: 'grid',    label: 'Modules',   path: '/modules' },
   { icon: 'user',    label: 'You',       path: '/you' },
 ] as const
