@@ -57,6 +57,14 @@ export interface Project {
   pillar: string
 }
 
+export interface GoodNews {
+  id: string
+  date: string
+  title: string
+  notes?: string
+  category?: string
+}
+
 export type SheetType =
   | { type: 'quick' }
   | { type: 'reminder' }
@@ -71,4 +79,7 @@ export type SheetType =
   | { type: 'add-person' }
   | { type: 'edit-person'; id: string }
   | { type: 'add-person-reminder'; personId: string }
+  | { type: 'add-good-news' }
+  | { type: 'edit-good-news'; id: string }
+  | { type: 'good-news-admin' }
   | { type: 'info'; message: string }

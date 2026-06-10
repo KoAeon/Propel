@@ -16,6 +16,8 @@ import { TaskSheet } from '@/components/tasks/TaskSheet'
 import { ProjectSheet } from '@/components/projects/ProjectSheet'
 import { PersonSheet } from '@/components/people/PersonSheet'
 import { PersonReminderSheet } from '@/components/people/PersonReminderSheet'
+import { GoodNewsSheet } from '@/components/good-news/GoodNewsSheet'
+import { GoodNewsAdminSheet } from '@/components/good-news/GoodNewsAdminSheet'
 import { Icon } from '@/components/ui/Icon'
 import { Press } from '@/components/ui/Press'
 import { T } from '@/lib/theme'
@@ -40,6 +42,9 @@ function Sheets() {
       {sheet?.type === 'add-person' && <PersonSheet />}
       {sheet?.type === 'edit-person' && <PersonSheet editId={(sheet as { type: 'edit-person'; id: string }).id} />}
       {sheet?.type === 'add-person-reminder' && <PersonReminderSheet personId={(sheet as { type: 'add-person-reminder'; personId: string }).personId} />}
+      {sheet?.type === 'add-good-news' && <GoodNewsSheet />}
+      {sheet?.type === 'edit-good-news' && <GoodNewsSheet editId={(sheet as { type: 'edit-good-news'; id: string }).id} />}
+      {sheet?.type === 'good-news-admin' && <GoodNewsAdminSheet />}
       {sheet?.type === 'info' && (
         <Sheet title="Heads up" onClose={closeSheet}>
           <div style={{ fontSize: 14, color: T.dim, lineHeight: 1.6, paddingBottom: 8 }}>

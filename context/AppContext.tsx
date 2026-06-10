@@ -1,8 +1,9 @@
 'use client'
 import { createContext, useContext, useState, useEffect, useCallback, useRef, ReactNode } from 'react'
 import { useSession } from 'next-auth/react'
-import type { Habit, Reminder, Task, Project, SheetType, TaskStatus } from '@/lib/types'
+import type { Habit, Reminder, Task, Project, GoodNews, SheetType, TaskStatus } from '@/lib/types'
 import type { Person, PersonReminder } from '@/lib/people'
+import { DEFAULT_GOOD_NEWS_CATEGORIES } from '@/lib/seed'
 
 interface AppState {
   habits: Habit[]
@@ -10,6 +11,8 @@ interface AppState {
   tasks: Task[]
   projects: Project[]
   people: Person[]
+  goodNews: GoodNews[]
+  goodNewsCategories: string[]
   autoRemind: boolean
   webMode: boolean
   sheet: SheetType | null
@@ -42,6 +45,10 @@ interface AppState {
   deletePerson: (id: string) => void
   addPersonReminder: (personId: string, r: Omit<PersonReminder, 'id'>) => void
   deletePersonReminder: (personId: string, reminderId: string) => void
+  addGoodNews: (g: Omit<GoodNews, 'id'>) => void
+  editGoodNews: (id: string, updates: Partial<Omit<GoodNews, 'id'>>) => void
+  deleteGoodNews: (id: string) => void
+  setGoodNewsCategories: (cats: string[]) => void
   setAutoRemind: (v: boolean) => void
   setWebMode: (v: boolean) => void
   openSheet: (s: SheetType) => void
@@ -76,6 +83,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [tasks, setTasks] = useState<Task[]>([])
   const [projects, setProjects] = useState<Project[]>([])
   const [people, setPeople] = useState<Person[]>([])
+  const [goodNews, setGoodNews] = useState<GoodNews[]>([])
+  const [goodNewsCategories, setGoodNewsCategoriesState] = useState<string[]>(DEFAULT_GOOD_NEWS_CATEGORIES)
   const [autoRemind, setAutoRemindState] = useState(true)
   const [webMode, setWebModeState] = useState(false)
   const [sheet, setSheet] = useState<SheetType | null>(null)
@@ -115,6 +124,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
           setProjects(data.projects ?? [])
           setTasks(data.tasks ?? [])
           setPeople(data.people ?? [])
+          setGoodNews(data.goodNews ?? [])
+          setGoodNewsCategoriesState(data.goodNewsCategories ?? DEFAULT_GOOD_NEWS_CATEGORIES)
           setAutoRemindState(data.autoRemind ?? true)
           setWebModeState(data.webMode ?? false)
         }
@@ -145,6 +156,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
       setProjects(data.projects ?? [])
       setTasks(data.tasks ?? [])
       setPeople(data.people ?? [])
+      setGoodNews(data.goodNews ?? [])
+      setGoodNewsCategoriesState(data.goodNewsCategories ?? DEFAULT_GOOD_NEWS_CATEGORIES)
     }
     setCloudSyncNeeded(false)
     flash('Data migrated to cloud ✓')
@@ -340,6 +353,36 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }))
   }, [authed])
 
+  // ── Good News ─────────────────────────────────────────
+  const addGoodNews = useCallback((g: Omit<GoodNews, 'id'>) => {
+    const entry = { ...g, id: 'gn' + Date.now() }
+    setGoodNews(gs => [entry, ...gs].sort((a, b) => (b.date ?? '').localeCompare(a.date ?? '')))
+    if (authed) post('/api/db/good-news', entry)
+    setSheet(null); flash('Good news saved 🎉')
+  }, [authed, flash])
+
+  const editGoodNews = useCallback((id: string, updates: Partial<Omit<GoodNews, 'id'>>) => {
+    setGoodNews(gs => gs.map(g => {
+      if (g.id !== id) return g
+      const updated = { ...g, ...updates }
+      if (authed) post('/api/db/good-news', updated)
+      return updated
+    }).sort((a, b) => (b.date ?? '').localeCompare(a.date ?? '')))
+    setSheet(null); flash('Good news updated')
+  }, [authed, flash])
+
+  const deleteGoodNews = useCallback((id: string) => {
+    setGoodNews(gs => gs.filter(g => g.id !== id))
+    if (authed) del(`/api/db/good-news/${id}`)
+    setSheet(null); flash('Entry deleted')
+  }, [authed, flash])
+
+  const setGoodNewsCategories = useCallback((cats: string[]) => {
+    setGoodNewsCategoriesState(cats)
+    if (authed) post('/api/db/settings', { goodNewsCategories: cats })
+    setSheet(null); flash('Categories saved')
+  }, [authed, flash])
+
   // ── Settings ──────────────────────────────────────────
   const setAutoRemind = useCallback((v: boolean) => {
     setAutoRemindState(v)
@@ -359,7 +402,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   return (
     <Ctx.Provider value={{
-      habits, reminders, tasks, projects, people, autoRemind, webMode, sheet, toast,
+      habits, reminders, tasks, projects, people, goodNews, goodNewsCategories, autoRemind, webMode, sheet, toast,
       dbLoading, cloudSyncNeeded, syncToCloud,
       addHabit, editHabit, deleteHabit, toggleHabit,
       addReminder, editReminder, deleteReminder, setReminderEventId,
@@ -367,6 +410,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       toggleSub, setStatus, setSubText, setSubDue, addSub, delSub,
       addProject, editProject, deleteProject,
       addPerson, editPerson, deletePerson, addPersonReminder, deletePersonReminder,
+      addGoodNews, editGoodNews, deleteGoodNews, setGoodNewsCategories,
       setAutoRemind, setWebMode, openSheet, closeSheet, flash,
     }}>
       {children}

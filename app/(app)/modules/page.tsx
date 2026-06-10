@@ -19,7 +19,7 @@ const MODULES = [
   { icon: 'wallet',  label: 'Wealth',       dest: null,         live: false },
   { icon: 'leaf',    label: 'Peacefulness', dest: null,         live: false },
   { icon: 'book',    label: 'Study',        dest: null,         live: false },
-  { icon: 'gift',    label: 'Good News',    dest: null,         live: false },
+  { icon: 'gift',    label: 'Good News',    dest: '/good-news', live: true  },
   { icon: 'bulb',    label: 'Ideas',        dest: null,         live: false },
 ] as const
 

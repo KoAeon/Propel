@@ -38,6 +38,11 @@ export const SEED_PEOPLE: Person[] = [
   },
 ]
 
+export const DEFAULT_GOOD_NEWS_CATEGORIES = ['Work', 'Finance', 'Family', 'Friendship', 'Health', 'Soul']
+
+// Stable palette for good-news category chips, assigned by index
+export const GOOD_NEWS_PALETTE = ['#5B8DEF', '#E0A93B', '#FF6BC1', '#4FB477', '#E0716B', '#9B6BFF', '#3FA9F5', '#7FD89B']
+
 export const STATUS_ORDER = ['Not Started', 'Started', 'On Hold', 'Waiting', 'Completed'] as const
 
 export const STATUS_COLOR: Record<string, string> = {

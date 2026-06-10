@@ -1,7 +1,7 @@
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { getSupabaseServer } from '@/lib/supabase'
-import type { Habit, Reminder, Task, Project } from '@/lib/types'
+import type { Habit, Reminder, Task, Project, GoodNews } from '@/lib/types'
 import type { Person } from '@/lib/people'
 
 export async function getAuthUser() {
@@ -44,14 +44,22 @@ export function personFromDb(row: Record<string, unknown>): Person {
   return { id: row.id as string, name: row.name as string, relationship: row.relationship as Person['relationship'], phone: row.phone as string | undefined, email: row.email as string | undefined, dob: row.dob as string | undefined, notes: row.notes as string | undefined, photo: row.photo as string | undefined, reminders: (row.person_reminders ?? []) as Person['reminders'] }
 }
 
+export function goodNewsToDb(g: GoodNews, userId: string) {
+  return { id: g.id, user_id: userId, date: g.date ?? null, title: g.title, notes: g.notes ?? null, category: g.category ?? null }
+}
+export function goodNewsFromDb(row: Record<string, unknown>): GoodNews {
+  return { id: row.id as string, date: row.date as string, title: row.title as string, notes: row.notes as string | undefined, category: row.category as string | undefined }
+}
+
 export async function loadAllData(userId: string) {
   const sb = getSupabaseServer()
-  const [habits, reminders, projects, tasks, people, settings] = await Promise.all([
+  const [habits, reminders, projects, tasks, people, goodNews, settings] = await Promise.all([
     sb.from('habits').select('*').eq('user_id', userId).order('created_at'),
     sb.from('reminders').select('*').eq('user_id', userId).order('days'),
     sb.from('projects').select('*').eq('user_id', userId).order('created_at'),
     sb.from('tasks').select('*').eq('user_id', userId).order('created_at'),
     sb.from('people').select('*').eq('user_id', userId).order('name'),
+    sb.from('good_news').select('*').eq('user_id', userId).order('date', { ascending: false }),
     sb.from('user_settings').select('*').eq('user_id', userId).single(),
   ])
   return {
@@ -60,8 +68,10 @@ export async function loadAllData(userId: string) {
     projects: (projects.data ?? []).map(projectFromDb),
     tasks: (tasks.data ?? []).map(taskFromDb),
     people: (people.data ?? []).map(personFromDb),
+    goodNews: (goodNews.data ?? []).map(goodNewsFromDb),
     autoRemind: (settings.data?.auto_remind ?? true) as boolean,
     webMode: (settings.data?.web_mode ?? false) as boolean,
+    goodNewsCategories: (settings.data?.good_news_categories ?? null) as string[] | null,
   }
 }
 
