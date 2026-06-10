@@ -44,6 +44,7 @@ export interface Task {
   priority: TaskPriority
   pillar: string
   projectId?: string
+  reminderId?: string
   subs: Subtask[]
 }
 

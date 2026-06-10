@@ -230,28 +230,71 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, [authed])
 
   // ── Tasks ──────────────────────────────────────────────
+  // Build the reminder that mirrors a task's due date
+  const buildTaskReminder = useCallback((task: Task): Omit<Reminder, 'id'> => {
+    const formatted = task.due ? new Date(task.due + 'T12:00:00').toLocaleDateString('en-AU', { day: 'numeric', month: 'short' }) : ''
+    const time = task.time || '09:00'
+    const target = new Date((task.due || '') + 'T12:00:00')
+    const today = new Date(); today.setHours(0, 0, 0, 0)
+    const days = task.due ? Math.round((target.getTime() - today.getTime()) / 86400000) : 365
+    return {
+      glyph: '✅', title: task.title,
+      sub: `Task due ${formatted}${task.time ? ` · ${time}` : ''} · ${task.priority} priority`,
+      days, date: task.due || undefined, time, freq: 'Once', cat: 'Task',
+    }
+  }, [])
+
+  // Create or update the reminder linked to a task
+  const upsertTaskReminder = useCallback((rid: string, task: Task) => {
+    const reminder = { ...buildTaskReminder(task), id: rid }
+    setReminders(rs => sortReminders(rs.some(r => r.id === rid) ? rs.map(r => r.id === rid ? reminder : r) : [...rs, reminder]))
+    if (authed) post('/api/db/reminders', reminder)
+  }, [authed, buildTaskReminder])
+
+  const removeReminderById = useCallback((rid: string) => {
+    setReminders(rs => rs.filter(r => r.id !== rid))
+    if (authed) del(`/api/db/reminders/${rid}`)
+  }, [authed])
+
   const addTask = useCallback((t: Omit<Task, 'id'>) => {
-    const task = { ...t, id: 't' + Date.now() }
+    let task: Task = { ...t, id: 't' + Date.now() }
+    // Auto-create a reminder when a due date is set (and not already completed)
+    if (task.due && task.status !== 'Completed') {
+      const rid = 'r' + (Date.now() + 1)
+      upsertTaskReminder(rid, task)
+      task = { ...task, reminderId: rid }
+    }
     setTasks(ts => [task, ...ts])
     if (authed) post('/api/db/tasks', task)
     setSheet(null); flash('Task added')
-  }, [authed, flash])
+  }, [authed, flash, upsertTaskReminder])
 
   const editTask = useCallback((id: string, updates: Partial<Omit<Task, 'id'>>) => {
-    setTasks(ts => ts.map(t => {
-      if (t.id !== id) return t
-      const updated = { ...t, ...updates }
-      if (authed) post('/api/db/tasks', updated)
-      return updated
-    }))
+    const existing = tasksRef.current.find(t => t.id === id)
+    if (!existing) return
+    let updated: Task = { ...existing, ...updates }
+    // Reconcile the linked reminder
+    if (updated.status === 'Completed') {
+      if (existing.reminderId) { removeReminderById(existing.reminderId); updated = { ...updated, reminderId: undefined } }
+    } else if (updated.due) {
+      const rid = existing.reminderId ?? 'r' + Date.now()
+      upsertTaskReminder(rid, updated)
+      updated = { ...updated, reminderId: rid }
+    } else if (existing.reminderId) {
+      removeReminderById(existing.reminderId); updated = { ...updated, reminderId: undefined }
+    }
+    setTasks(ts => ts.map(t => t.id === id ? updated : t))
+    if (authed) post('/api/db/tasks', updated)
     setSheet(null); flash('Task saved')
-  }, [authed, flash])
+  }, [authed, flash, upsertTaskReminder, removeReminderById])
 
   const deleteTask = useCallback((id: string) => {
+    const existing = tasksRef.current.find(t => t.id === id)
+    if (existing?.reminderId) removeReminderById(existing.reminderId)
     setTasks(ts => ts.filter(t => t.id !== id))
     if (authed) del(`/api/db/tasks/${id}`)
     setSheet(null); flash('Task deleted')
-  }, [authed, flash])
+  }, [authed, flash, removeReminderById])
 
   const updateTask = useCallback((id: string, fn: (t: Task) => Task) => {
     setTasks(ts => ts.map(t => {
@@ -266,9 +309,22 @@ export function AppProvider({ children }: { children: ReactNode }) {
     updateTask(taskId, t => ({ ...t, subs: t.subs.map((s, j) => j === i ? { ...s, done: !s.done } : s) }))
   , [updateTask])
 
-  const setStatus = useCallback((taskId: string, status: TaskStatus) =>
-    updateTask(taskId, t => ({ ...t, status }))
-  , [updateTask])
+  const setStatus = useCallback((taskId: string, status: TaskStatus) => {
+    const existing = tasksRef.current.find(t => t.id === taskId)
+    if (!existing) return
+    let updated: Task = { ...existing, status }
+    if (status === 'Completed') {
+      // Completing a task removes its reminder
+      if (existing.reminderId) { removeReminderById(existing.reminderId); updated = { ...updated, reminderId: undefined } }
+    } else if (existing.due && !existing.reminderId) {
+      // Re-opening a task with a due date restores its reminder
+      const rid = 'r' + Date.now()
+      upsertTaskReminder(rid, updated)
+      updated = { ...updated, reminderId: rid }
+    }
+    setTasks(ts => ts.map(t => t.id === taskId ? updated : t))
+    if (authed) post('/api/db/tasks', updated)
+  }, [authed, removeReminderById, upsertTaskReminder])
 
   const setSubText = useCallback((taskId: string, i: number, text: string) =>
     updateTask(taskId, t => ({ ...t, subs: t.subs.map((s, j) => j === i ? { ...s, t: text } : s) }))

@@ -19,7 +19,7 @@ function todayISO() {
 interface Props { editId?: string; projectId?: string }
 
 export function TaskSheet({ editId, projectId }: Props) {
-  const { closeSheet, tasks, projects, addTask, editTask, addReminder } = useApp()
+  const { closeSheet, tasks, projects, addTask, editTask } = useApp()
   const existing = editId ? tasks.find(t => t.id === editId) : undefined
 
   const [title, setTitle] = useState(existing?.title ?? '')
@@ -30,8 +30,6 @@ export function TaskSheet({ editId, projectId }: Props) {
   const [pillar, setPillar] = useState(existing?.pillar ?? '')
   const [projId, setProjId] = useState(existing?.projectId ?? projectId ?? '')
   const [time, setTime] = useState(existing?.time ?? '')
-  const [addToReminders, setAddToReminders] = useState(false)
-  const [reminderTime, setReminderTime] = useState('')
 
   const ok = title.trim().length > 0
 
@@ -42,32 +40,15 @@ export function TaskSheet({ editId, projectId }: Props) {
     colorScheme: 'dark',
   }
 
-  function daysUntil(iso: string) {
-    const target = new Date(iso + 'T12:00:00')
-    const today = new Date(); today.setHours(0, 0, 0, 0)
-    return Math.max(0, Math.round((target.getTime() - today.getTime()) / 86400000))
-  }
-
   const handleSave = () => {
     if (!ok) return
     const task: Omit<Task, 'id'> = {
       title: title.trim(), desc: desc.trim(), due, time: time || undefined, status, priority,
-      pillar: pillar.trim(), projectId: projId || undefined, subs: existing?.subs ?? [],
+      pillar: pillar.trim(), projectId: projId || undefined,
+      reminderId: existing?.reminderId, subs: existing?.subs ?? [],
     }
-    if (editId) {
-      editTask(editId, task)
-    } else {
-      addTask(task)
-      if (addToReminders && due) {
-        const formatted = new Date(due + 'T12:00:00').toLocaleDateString('en-AU', { day: 'numeric', month: 'short' })
-        const rTime = reminderTime || time || '09:00'
-        addReminder({
-          glyph: '✅', title: title.trim(),
-          sub: `Due ${formatted} · ${rTime} · ${priority} priority`,
-          days: daysUntil(due), date: due, time: rTime, freq: 'Once', cat: 'Task',
-        })
-      }
-    }
+    if (editId) editTask(editId, task)
+    else addTask(task)
   }
 
   return (
@@ -138,33 +119,15 @@ export function TaskSheet({ editId, projectId }: Props) {
           </div>
         )}
 
-        {!editId && due && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-            <Press onClick={() => setAddToReminders(v => !v)} scale={0.98} style={{
-              display: 'flex', alignItems: 'center', gap: 12, padding: '12px 14px', borderRadius: 12,
-              background: addToReminders ? T.surface2 : 'transparent',
-              border: `1px solid ${addToReminders ? T.a1 + '66' : T.border}`,
-            }}>
-              <div style={{
-                width: 22, height: 22, borderRadius: 6, flexShrink: 0,
-                background: addToReminders ? T.a1 : 'transparent',
-                border: `2px solid ${addToReminders ? T.a1 : T.border}`,
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                transition: 'all .15s ease',
-              }}>
-                {addToReminders && <span style={{ fontSize: 12, color: '#fff', lineHeight: 1 }}>✓</span>}
-              </div>
-              <span style={{ fontSize: 13.5, fontWeight: 600, color: addToReminders ? T.text : T.dim }}>
-                Also add to Reminders
-              </span>
-            </Press>
-            {addToReminders && (
-              <div style={{ paddingLeft: 2 }}>
-                <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1, textTransform: 'uppercase', color: T.dim, marginBottom: 6 }}>Reminder time <span style={{ fontWeight: 400, textTransform: 'none', letterSpacing: 0 }}>(defaults to 9:00 am)</span></div>
-                <input type="time" value={reminderTime} onChange={e => setReminderTime(e.target.value)}
-                  style={{ ...inputStyle, width: 'auto' }} />
-              </div>
-            )}
+        {due && status !== 'Completed' && (
+          <div style={{
+            display: 'flex', alignItems: 'center', gap: 10, padding: '11px 14px', borderRadius: 12,
+            background: T.surface2, border: `1px solid ${T.border}`,
+          }}>
+            <span style={{ fontSize: 16, flexShrink: 0 }}>🔔</span>
+            <span style={{ fontSize: 12.5, color: T.dim, lineHeight: 1.4 }}>
+              A reminder is created automatically for the due date{time ? ` at ${time}` : ' (9:00 am)'}. It clears when the task is completed.
+            </span>
           </div>
         )}
 
