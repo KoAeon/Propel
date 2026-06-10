@@ -1,5 +1,5 @@
 'use client'
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { Press } from '@/components/ui/Press'
 import { Icon } from '@/components/ui/Icon'
 import { T } from '@/lib/theme'
@@ -16,44 +16,59 @@ interface StatusDropdownProps {
 
 export function StatusDropdown({ value, onChange, small }: StatusDropdownProps) {
   const [open, setOpen] = useState(false)
+  const [pos, setPos] = useState({ top: 0, left: 0 })
+  const btnRef = useRef<HTMLDivElement>(null)
+
+  const handleOpen = () => {
+    if (btnRef.current) {
+      const r = btnRef.current.getBoundingClientRect()
+      setPos({ top: r.bottom + 6, left: r.left })
+    }
+    setOpen(o => !o)
+  }
 
   return (
     <div style={{ position: 'relative', display: 'inline-block', fontFamily: FONT_BODY }}>
-      <Press
-        onClick={() => setOpen(o => !o)}
-        scale={0.96}
-        style={{
-          display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 6,
-          minWidth: small ? 92 : 104,
-          padding: small ? '6px 11px' : '7px 12px',
-          borderRadius: 9,
-          background: STATUS_COLOR[value],
-          color: '#fff',
-          fontSize: small ? 11.5 : 12.5,
-          fontWeight: 700,
-          boxShadow: '0 2px 8px ' + STATUS_COLOR[value] + '55',
-        }}
-      >
-        {value}
-        <svg width="9" height="9" viewBox="0 0 11 11" fill="none" stroke="#fff" strokeWidth="2.1" strokeLinecap="round" style={{ opacity: .85 }}>
-          <path d="M2 4l3.5 3.5L9 4" />
-        </svg>
-      </Press>
+      <div ref={btnRef}>
+        <Press
+          onClick={handleOpen}
+          scale={0.96}
+          style={{
+            display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+            minWidth: small ? 92 : 104,
+            padding: small ? '6px 11px' : '7px 12px',
+            borderRadius: 9,
+            background: STATUS_COLOR[value],
+            color: '#fff',
+            fontSize: small ? 11.5 : 12.5,
+            fontWeight: 700,
+            boxShadow: '0 2px 8px ' + STATUS_COLOR[value] + '55',
+          }}
+        >
+          {value}
+          <svg width="9" height="9" viewBox="0 0 11 11" fill="none" stroke="#fff" strokeWidth="2.1" strokeLinecap="round" style={{ opacity: .85 }}>
+            <path d="M2 4l3.5 3.5L9 4" />
+          </svg>
+        </Press>
+      </div>
 
       {open && (
         <>
           <div
             onClick={e => { e.stopPropagation(); setOpen(false) }}
-            style={{ position: 'fixed', inset: 0, zIndex: 90 }}
+            style={{ position: 'fixed', inset: 0, zIndex: 990 }}
           />
           <div
             onClick={e => e.stopPropagation()}
             style={{
-              position: 'absolute', top: '100%', left: 0, marginTop: 6,
-              zIndex: 91, background: '#1b1726',
+              position: 'fixed',
+              top: pos.top,
+              left: pos.left,
+              zIndex: 991,
+              background: '#1b1726',
               border: `1px solid ${T.border}`,
               borderRadius: 12, padding: 5, minWidth: 156,
-              boxShadow: '0 14px 40px rgba(0,0,0,.5)',
+              boxShadow: '0 14px 40px rgba(0,0,0,.7)',
             }}
           >
             {STATUS_ORDER.map(s => (
