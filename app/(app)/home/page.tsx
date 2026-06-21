@@ -9,6 +9,7 @@ import { Avatar } from '@/components/ui/Avatar'
 import { Icon } from '@/components/ui/Icon'
 import { Press } from '@/components/ui/Press'
 import { T } from '@/lib/theme'
+import { reminderDays } from '@/lib/seed'
 
 const FONT_DISPLAY = "'Space Grotesk', 'Manrope', system-ui, sans-serif"
 const FONT_BODY = "'Manrope', system-ui, sans-serif"
@@ -19,7 +20,8 @@ export default function Home() {
 
   const doneCount = habits.filter(h => h.done).length
   const pct = habits.length ? Math.round((doneCount / habits.length) * 100) : 0
-  const next = reminders[0]
+  const upcoming = reminders.map(r => ({ ...r, days: reminderDays(r) })).sort((a, b) => a.days - b.days)
+  const next = upcoming.find(r => r.days >= 0) ?? upcoming[0]
   const bestStreak = habits.length ? Math.max(...habits.map(h => h.streak)) : 0
 
   const today = new Date()
@@ -120,7 +122,7 @@ export default function Home() {
             <Tile glyph={next.glyph} from={T.a1} to={T.a2} size={38} radius={11} />
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ fontSize: 14, fontWeight: 700, color: T.text }}>{next.title}</div>
-              <div style={{ fontSize: 12, color: T.dim }}>in {next.days} days · {next.sub}</div>
+              <div style={{ fontSize: 12, color: T.dim }}>{next.days < 0 ? 'just passed' : next.days === 0 ? 'today' : next.days === 1 ? 'tomorrow' : `in ${next.days} days`} · {next.sub}</div>
             </div>
             <div style={{ fontSize: 11, fontWeight: 700, color: T.a1, padding: '5px 10px', borderRadius: 9, background: T.surface2, border: `1px solid ${T.border}` }}>
               View

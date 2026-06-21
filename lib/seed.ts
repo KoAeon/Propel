@@ -55,6 +55,36 @@ export const STATUS_COLOR: Record<string, string> = {
 
 export const REMINDER_CATS = ['All', 'Renewal', 'Birthday', 'Financial', 'Health', 'Task'] as const
 
+// How long a recurring reminder lingers in "Overdue" after its date before it
+// rolls forward to the next occurrence (e.g. a birthday stays for ~4 days, then
+// quietly advances to next year instead of sitting overdue forever).
+export const REMINDER_GRACE_DAYS = 4
+
+const FREQ_ADVANCE: Record<string, (d: Date) => void> = {
+  Weekly: d => d.setDate(d.getDate() + 7),
+  Fortnightly: d => d.setDate(d.getDate() + 14),
+  Monthly: d => d.setMonth(d.getMonth() + 1),
+  '6 Monthly': d => d.setMonth(d.getMonth() + 6),
+  Yearly: d => d.setFullYear(d.getFullYear() + 1),
+}
+
+// Days until a reminder's next occurrence. Recurring reminders roll forward to
+// their next instance once they're more than the grace window past due, so they
+// leave the Overdue list automatically without ever being deleted.
+export function reminderDays(r: { date?: string; days: number; freq?: string }): number {
+  if (!r.date) return r.days
+  const today = new Date(); today.setHours(0, 0, 0, 0)
+  const target = new Date(r.date + 'T12:00:00')
+  const advance = r.freq && r.freq !== 'Once' ? FREQ_ADVANCE[r.freq] : undefined
+  if (advance) {
+    let guard = 0
+    while ((target.getTime() - today.getTime()) / 86400000 < -REMINDER_GRACE_DAYS && guard++ < 1000) {
+      advance(target)
+    }
+  }
+  return Math.round((target.getTime() - today.getTime()) / 86400000)
+}
+
 export const CAT_GLYPH: Record<string, string> = {
   Renewal: '🔄',
   Birthday: '🎂',
