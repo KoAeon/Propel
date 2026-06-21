@@ -68,11 +68,13 @@ const FREQ_ADVANCE: Record<string, (d: Date) => void> = {
   Yearly: d => d.setFullYear(d.getFullYear() + 1),
 }
 
-// Days until a reminder's next occurrence. Recurring reminders roll forward to
+type ReminderLike = { date?: string; days: number; freq?: string; time?: string; sub?: string }
+
+// The next time a reminder actually fires. Recurring reminders roll forward to
 // their next instance once they're more than the grace window past due, so they
 // leave the Overdue list automatically without ever being deleted.
-export function reminderDays(r: { date?: string; days: number; freq?: string }): number {
-  if (!r.date) return r.days
+export function nextOccurrence(r: ReminderLike): Date | null {
+  if (!r.date) return null
   const today = new Date(); today.setHours(0, 0, 0, 0)
   const target = new Date(r.date + 'T12:00:00')
   const advance = r.freq && r.freq !== 'Once' ? FREQ_ADVANCE[r.freq] : undefined
@@ -82,7 +84,28 @@ export function reminderDays(r: { date?: string; days: number; freq?: string }):
       advance(target)
     }
   }
-  return Math.round((target.getTime() - today.getTime()) / 86400000)
+  return target
+}
+
+// Days until a reminder's next occurrence (negative = within the grace window).
+export function reminderDays(r: ReminderLike): number {
+  const next = nextOccurrence(r)
+  if (!next) return r.days
+  const today = new Date(); today.setHours(0, 0, 0, 0)
+  return Math.round((next.getTime() - today.getTime()) / 86400000)
+}
+
+// Human-readable date/time of the next occurrence, e.g. "Fri, 11 Jun 2027 · 9:00am".
+// Recurring reminders show the upcoming year, not the original stored date.
+export function reminderWhen(r: ReminderLike): string {
+  const next = nextOccurrence(r)
+  if (!next) return r.sub ?? ''
+  const datePart = next.toLocaleDateString('en-AU', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })
+  if (!r.time) return `${datePart} · 9:00am`
+  const [h, m] = r.time.split(':').map(Number)
+  const suffix = h >= 12 ? 'pm' : 'am'
+  const h12 = h % 12 || 12
+  return `${datePart} · ${h12}:${String(m).padStart(2, '0')}${suffix}`
 }
 
 export const CAT_GLYPH: Record<string, string> = {

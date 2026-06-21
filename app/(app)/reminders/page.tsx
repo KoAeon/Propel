@@ -8,7 +8,7 @@ import { Icon } from '@/components/ui/Icon'
 import { Press } from '@/components/ui/Press'
 import { Toggle } from '@/components/ui/Toggle'
 import { T } from '@/lib/theme'
-import { REMINDER_CATS, reminderDays } from '@/lib/seed'
+import { REMINDER_CATS, reminderDays, reminderWhen } from '@/lib/seed'
 
 const FONT_DISPLAY = "'Space Grotesk', 'Manrope', system-ui, sans-serif"
 
@@ -19,7 +19,7 @@ export default function Reminders() {
 
   const list = reminders
     .filter(r => filter === 'All' || r.cat === filter)
-    .map(r => ({ ...r, days: reminderDays(r) }))
+    .map(r => ({ ...r, days: reminderDays(r), sub: reminderWhen(r) }))
     .sort((a, b) => a.days !== b.days ? a.days - b.days : (a.time ?? '09:00') < (b.time ?? '09:00') ? -1 : 1)
 
   const groups = [

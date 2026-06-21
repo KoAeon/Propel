@@ -9,7 +9,7 @@ import { Avatar } from '@/components/ui/Avatar'
 import { Icon } from '@/components/ui/Icon'
 import { Press } from '@/components/ui/Press'
 import { T } from '@/lib/theme'
-import { reminderDays } from '@/lib/seed'
+import { reminderDays, reminderWhen } from '@/lib/seed'
 
 const FONT_DISPLAY = "'Space Grotesk', 'Manrope', system-ui, sans-serif"
 const FONT_BODY = "'Manrope', system-ui, sans-serif"
@@ -20,7 +20,7 @@ export default function Home() {
 
   const doneCount = habits.filter(h => h.done).length
   const pct = habits.length ? Math.round((doneCount / habits.length) * 100) : 0
-  const upcoming = reminders.map(r => ({ ...r, days: reminderDays(r) })).sort((a, b) => a.days - b.days)
+  const upcoming = reminders.map(r => ({ ...r, days: reminderDays(r), sub: reminderWhen(r) })).sort((a, b) => a.days - b.days)
   const next = upcoming.find(r => r.days >= 0) ?? upcoming[0]
   const bestStreak = habits.length ? Math.max(...habits.map(h => h.streak)) : 0
 
