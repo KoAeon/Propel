@@ -12,6 +12,7 @@ const MODULES = [
   { icon: 'flame',   label: 'Habits',       dest: '/habits',    live: true  },
   { icon: 'bell',    label: 'Reminders',    dest: '/reminders', live: true  },
   { icon: 'doc',     label: 'Tasks',        dest: '/tasks',     live: true  },
+  { icon: 'doc',     label: 'Reno Tasks',   dest: '/reno-tasks', live: true  },
   { icon: 'folder',  label: 'Projects',     dest: '/projects',  live: true  },
   { icon: 'user',    label: 'People',       dest: '/people',    live: true  },
   { icon: 'target',  label: 'Goals & Vision', dest: null,       live: false },

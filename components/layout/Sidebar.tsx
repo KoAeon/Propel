@@ -13,6 +13,7 @@ const NAV = [
   { icon: 'flame',   label: 'Habits',    path: '/habits' },
   { icon: 'bell',    label: 'Reminders', path: '/reminders' },
   { icon: 'doc',     label: 'Tasks',     path: '/tasks' },
+  { icon: 'doc',     label: 'Reno Tasks', path: '/reno-tasks' },
   { icon: 'folder',  label: 'Projects',  path: '/projects' },
   { icon: 'user',    label: 'People',    path: '/people' },
   { icon: 'gift',    label: 'Good News', path: '/good-news' },

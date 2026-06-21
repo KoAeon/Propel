@@ -66,6 +66,19 @@ export interface GoodNews {
   category?: string
 }
 
+export type RenoTaskStatus = 'Not Started' | 'In Progress' | 'Complete'
+export type RenoTaskAssignee = 'Zara' | 'Richard' | 'Sam'
+
+export interface RenoTask {
+  id: string
+  title: string
+  notes: string
+  assignedTo: RenoTaskAssignee | ''
+  dueDate: string
+  dateCompleted: string
+  status: RenoTaskStatus
+}
+
 export type SheetType =
   | { type: 'quick' }
   | { type: 'reminder' }
@@ -83,4 +96,6 @@ export type SheetType =
   | { type: 'add-good-news' }
   | { type: 'edit-good-news'; id: string }
   | { type: 'good-news-admin' }
+  | { type: 'add-reno-task' }
+  | { type: 'edit-reno-task'; id: string }
   | { type: 'info'; message: string }
