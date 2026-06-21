@@ -1,7 +1,7 @@
 'use client'
 import { createContext, useContext, useState, useEffect, useCallback, useRef, ReactNode } from 'react'
 import { useSession } from 'next-auth/react'
-import type { Habit, Reminder, Task, Project, GoodNews, RenoTask, SheetType, TaskStatus } from '@/lib/types'
+import type { Habit, Reminder, Task, Project, GoodNews, SheetType, TaskStatus } from '@/lib/types'
 import type { Person, PersonReminder } from '@/lib/people'
 import { DEFAULT_GOOD_NEWS_CATEGORIES } from '@/lib/seed'
 
@@ -12,7 +12,6 @@ interface AppState {
   projects: Project[]
   people: Person[]
   goodNews: GoodNews[]
-  renoTasks: RenoTask[]
   goodNewsCategories: string[]
   autoRemind: boolean
   webMode: boolean
@@ -46,9 +45,6 @@ interface AppState {
   deletePerson: (id: string) => void
   addPersonReminder: (personId: string, r: Omit<PersonReminder, 'id'>) => void
   deletePersonReminder: (personId: string, reminderId: string) => void
-  addRenoTask: (t: Omit<RenoTask, 'id'>) => void
-  editRenoTask: (id: string, updates: Partial<Omit<RenoTask, 'id'>>) => void
-  deleteRenoTask: (id: string) => void
   addGoodNews: (g: Omit<GoodNews, 'id'>) => void
   editGoodNews: (id: string, updates: Partial<Omit<GoodNews, 'id'>>) => void
   deleteGoodNews: (id: string) => void
@@ -88,7 +84,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [projects, setProjects] = useState<Project[]>([])
   const [people, setPeople] = useState<Person[]>([])
   const [goodNews, setGoodNews] = useState<GoodNews[]>([])
-  const [renoTasks, setRenoTasks] = useState<RenoTask[]>([])
   const [goodNewsCategories, setGoodNewsCategoriesState] = useState<string[]>(DEFAULT_GOOD_NEWS_CATEGORIES)
   const [autoRemind, setAutoRemindState] = useState(true)
   const [webMode, setWebModeState] = useState(false)
@@ -130,7 +125,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
           setTasks(data.tasks ?? [])
           setPeople(data.people ?? [])
           setGoodNews(data.goodNews ?? [])
-          setRenoTasks(data.renoTasks ?? [])
           setGoodNewsCategoriesState(data.goodNewsCategories ?? DEFAULT_GOOD_NEWS_CATEGORIES)
           setAutoRemindState(data.autoRemind ?? true)
           setWebModeState(data.webMode ?? false)
@@ -163,7 +157,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
       setTasks(data.tasks ?? [])
       setPeople(data.people ?? [])
       setGoodNews(data.goodNews ?? [])
-      setRenoTasks(data.renoTasks ?? [])
       setGoodNewsCategoriesState(data.goodNewsCategories ?? DEFAULT_GOOD_NEWS_CATEGORIES)
     }
     setCloudSyncNeeded(false)
@@ -416,30 +409,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }))
   }, [authed])
 
-  // ── Reno Tasks ────────────────────────────────────────
-  const addRenoTask = useCallback((t: Omit<RenoTask, 'id'>) => {
-    const task: RenoTask = { ...t, id: 'rt' + Date.now() }
-    setRenoTasks(ts => [task, ...ts])
-    if (authed) post('/api/db/reno-tasks', task)
-    setSheet(null); flash('Task added')
-  }, [authed, flash])
-
-  const editRenoTask = useCallback((id: string, updates: Partial<Omit<RenoTask, 'id'>>) => {
-    setRenoTasks(ts => ts.map(t => {
-      if (t.id !== id) return t
-      const updated = { ...t, ...updates }
-      if (authed) post('/api/db/reno-tasks', updated)
-      return updated
-    }))
-    setSheet(null); flash('Task saved')
-  }, [authed, flash])
-
-  const deleteRenoTask = useCallback((id: string) => {
-    setRenoTasks(ts => ts.filter(t => t.id !== id))
-    if (authed) del(`/api/db/reno-tasks/${id}`)
-    flash('Task deleted')
-  }, [authed, flash])
-
   // ── Good News ─────────────────────────────────────────
   const addGoodNews = useCallback((g: Omit<GoodNews, 'id'>) => {
     const entry = { ...g, id: 'gn' + Date.now() }
@@ -489,7 +458,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   return (
     <Ctx.Provider value={{
-      habits, reminders, tasks, projects, people, goodNews, renoTasks, goodNewsCategories, autoRemind, webMode, sheet, toast,
+      habits, reminders, tasks, projects, people, goodNews, goodNewsCategories, autoRemind, webMode, sheet, toast,
       dbLoading, cloudSyncNeeded, syncToCloud,
       addHabit, editHabit, deleteHabit, toggleHabit,
       addReminder, editReminder, deleteReminder, setReminderEventId,
@@ -497,7 +466,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
       toggleSub, setStatus, setSubText, setSubDue, addSub, delSub,
       addProject, editProject, deleteProject,
       addPerson, editPerson, deletePerson, addPersonReminder, deletePersonReminder,
-      addRenoTask, editRenoTask, deleteRenoTask,
       addGoodNews, editGoodNews, deleteGoodNews, setGoodNewsCategories,
       setAutoRemind, setWebMode, openSheet, closeSheet, flash,
     }}>

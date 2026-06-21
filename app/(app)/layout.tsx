@@ -18,7 +18,6 @@ import { PersonSheet } from '@/components/people/PersonSheet'
 import { PersonReminderSheet } from '@/components/people/PersonReminderSheet'
 import { GoodNewsSheet } from '@/components/good-news/GoodNewsSheet'
 import { GoodNewsAdminSheet } from '@/components/good-news/GoodNewsAdminSheet'
-import { RenoTaskSheet } from '@/components/reno-tasks/RenoTaskSheet'
 import { Icon } from '@/components/ui/Icon'
 import { Press } from '@/components/ui/Press'
 import { T } from '@/lib/theme'
@@ -46,8 +45,6 @@ function Sheets() {
       {sheet?.type === 'add-good-news' && <GoodNewsSheet />}
       {sheet?.type === 'edit-good-news' && <GoodNewsSheet editId={(sheet as { type: 'edit-good-news'; id: string }).id} />}
       {sheet?.type === 'good-news-admin' && <GoodNewsAdminSheet />}
-      {sheet?.type === 'add-reno-task' && <RenoTaskSheet />}
-      {sheet?.type === 'edit-reno-task' && <RenoTaskSheet editId={(sheet as { type: 'edit-reno-task'; id: string }).id} />}
       {sheet?.type === 'info' && (
         <Sheet title="Heads up" onClose={closeSheet}>
           <div style={{ fontSize: 14, color: T.dim, lineHeight: 1.6, paddingBottom: 8 }}>
