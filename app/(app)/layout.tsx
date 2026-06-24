@@ -18,6 +18,8 @@ import { PersonSheet } from '@/components/people/PersonSheet'
 import { PersonReminderSheet } from '@/components/people/PersonReminderSheet'
 import { GoodNewsSheet } from '@/components/good-news/GoodNewsSheet'
 import { GoodNewsAdminSheet } from '@/components/good-news/GoodNewsAdminSheet'
+import { PeaceSheet } from '@/components/peace/PeaceSheet'
+import { HealthSheet } from '@/components/health/HealthSheet'
 import { Icon } from '@/components/ui/Icon'
 import { Press } from '@/components/ui/Press'
 import { T } from '@/lib/theme'
@@ -45,6 +47,10 @@ function Sheets() {
       {sheet?.type === 'add-good-news' && <GoodNewsSheet />}
       {sheet?.type === 'edit-good-news' && <GoodNewsSheet editId={(sheet as { type: 'edit-good-news'; id: string }).id} />}
       {sheet?.type === 'good-news-admin' && <GoodNewsAdminSheet />}
+      {sheet?.type === 'add-peace' && <PeaceSheet peaceType={(sheet as { type: 'add-peace'; peaceType?: string }).peaceType} />}
+      {sheet?.type === 'edit-peace' && <PeaceSheet editId={(sheet as { type: 'edit-peace'; id: string }).id} />}
+      {sheet?.type === 'add-health' && <HealthSheet healthType={(sheet as { type: 'add-health'; healthType?: string }).healthType} />}
+      {sheet?.type === 'edit-health' && <HealthSheet editId={(sheet as { type: 'edit-health'; id: string }).id} />}
       {sheet?.type === 'info' && (
         <Sheet title="Heads up" onClose={closeSheet}>
           <div style={{ fontSize: 14, color: T.dim, lineHeight: 1.6, paddingBottom: 8 }}>

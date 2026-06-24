@@ -1,7 +1,7 @@
 'use client'
 import { createContext, useContext, useState, useEffect, useCallback, useRef, ReactNode } from 'react'
 import { useSession } from 'next-auth/react'
-import type { Habit, Reminder, Task, Project, GoodNews, SheetType, TaskStatus } from '@/lib/types'
+import type { Habit, Reminder, Task, Project, GoodNews, PeaceSession, HealthActivity, SheetType, TaskStatus } from '@/lib/types'
 import type { Person, PersonReminder } from '@/lib/people'
 import { DEFAULT_GOOD_NEWS_CATEGORIES } from '@/lib/seed'
 
@@ -13,6 +13,8 @@ interface AppState {
   people: Person[]
   goodNews: GoodNews[]
   goodNewsCategories: string[]
+  peace: PeaceSession[]
+  health: HealthActivity[]
   autoRemind: boolean
   webMode: boolean
   sheet: SheetType | null
@@ -49,6 +51,12 @@ interface AppState {
   editGoodNews: (id: string, updates: Partial<Omit<GoodNews, 'id'>>) => void
   deleteGoodNews: (id: string) => void
   setGoodNewsCategories: (cats: string[]) => void
+  addPeace: (p: Omit<PeaceSession, 'id'>) => void
+  editPeace: (id: string, updates: Partial<Omit<PeaceSession, 'id'>>) => void
+  deletePeace: (id: string) => void
+  addHealth: (h: Omit<HealthActivity, 'id'>) => void
+  editHealth: (id: string, updates: Partial<Omit<HealthActivity, 'id'>>) => void
+  deleteHealth: (id: string) => void
   setAutoRemind: (v: boolean) => void
   setWebMode: (v: boolean) => void
   openSheet: (s: SheetType) => void
@@ -85,6 +93,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [people, setPeople] = useState<Person[]>([])
   const [goodNews, setGoodNews] = useState<GoodNews[]>([])
   const [goodNewsCategories, setGoodNewsCategoriesState] = useState<string[]>(DEFAULT_GOOD_NEWS_CATEGORIES)
+  const [peace, setPeace] = useState<PeaceSession[]>([])
+  const [health, setHealth] = useState<HealthActivity[]>([])
   const [autoRemind, setAutoRemindState] = useState(true)
   const [webMode, setWebModeState] = useState(false)
   const [sheet, setSheet] = useState<SheetType | null>(null)
@@ -126,6 +136,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
           setPeople(data.people ?? [])
           setGoodNews(data.goodNews ?? [])
           setGoodNewsCategoriesState(data.goodNewsCategories ?? DEFAULT_GOOD_NEWS_CATEGORIES)
+          setPeace(data.peace ?? [])
+          setHealth(data.health ?? [])
           setAutoRemindState(data.autoRemind ?? true)
           setWebModeState(data.webMode ?? false)
         }
@@ -158,6 +170,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
       setPeople(data.people ?? [])
       setGoodNews(data.goodNews ?? [])
       setGoodNewsCategoriesState(data.goodNewsCategories ?? DEFAULT_GOOD_NEWS_CATEGORIES)
+      setPeace(data.peace ?? [])
+      setHealth(data.health ?? [])
     }
     setCloudSyncNeeded(false)
     flash('Data migrated to cloud ✓')
@@ -439,6 +453,56 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setSheet(null); flash('Categories saved')
   }, [authed, flash])
 
+  // ── Peacefulness ──────────────────────────────────────
+  const byDateDesc = <T extends { date?: string }>(a: T, b: T) => (b.date ?? '').localeCompare(a.date ?? '')
+
+  const addPeace = useCallback((p: Omit<PeaceSession, 'id'>) => {
+    const entry = { ...p, id: 'pc' + Date.now() }
+    setPeace(ps => [entry, ...ps].sort(byDateDesc))
+    if (authed) post('/api/db/peace', entry)
+    setSheet(null); flash('Session logged 🧘')
+  }, [authed, flash])
+
+  const editPeace = useCallback((id: string, updates: Partial<Omit<PeaceSession, 'id'>>) => {
+    setPeace(ps => ps.map(p => {
+      if (p.id !== id) return p
+      const updated = { ...p, ...updates }
+      if (authed) post('/api/db/peace', updated)
+      return updated
+    }).sort(byDateDesc))
+    setSheet(null); flash('Session updated')
+  }, [authed, flash])
+
+  const deletePeace = useCallback((id: string) => {
+    setPeace(ps => ps.filter(p => p.id !== id))
+    if (authed) del(`/api/db/peace/${id}`)
+    setSheet(null); flash('Session deleted')
+  }, [authed, flash])
+
+  // ── Health ────────────────────────────────────────────
+  const addHealth = useCallback((h: Omit<HealthActivity, 'id'>) => {
+    const entry = { ...h, id: 'ha' + Date.now() }
+    setHealth(hs => [entry, ...hs].sort(byDateDesc))
+    if (authed) post('/api/db/health', entry)
+    setSheet(null); flash('Activity logged 💪')
+  }, [authed, flash])
+
+  const editHealth = useCallback((id: string, updates: Partial<Omit<HealthActivity, 'id'>>) => {
+    setHealth(hs => hs.map(h => {
+      if (h.id !== id) return h
+      const updated = { ...h, ...updates }
+      if (authed) post('/api/db/health', updated)
+      return updated
+    }).sort(byDateDesc))
+    setSheet(null); flash('Activity updated')
+  }, [authed, flash])
+
+  const deleteHealth = useCallback((id: string) => {
+    setHealth(hs => hs.filter(h => h.id !== id))
+    if (authed) del(`/api/db/health/${id}`)
+    setSheet(null); flash('Activity deleted')
+  }, [authed, flash])
+
   // ── Settings ──────────────────────────────────────────
   const setAutoRemind = useCallback((v: boolean) => {
     setAutoRemindState(v)
@@ -458,7 +522,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   return (
     <Ctx.Provider value={{
-      habits, reminders, tasks, projects, people, goodNews, goodNewsCategories, autoRemind, webMode, sheet, toast,
+      habits, reminders, tasks, projects, people, goodNews, goodNewsCategories, peace, health, autoRemind, webMode, sheet, toast,
       dbLoading, cloudSyncNeeded, syncToCloud,
       addHabit, editHabit, deleteHabit, toggleHabit,
       addReminder, editReminder, deleteReminder, setReminderEventId,
@@ -467,6 +531,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
       addProject, editProject, deleteProject,
       addPerson, editPerson, deletePerson, addPersonReminder, deletePersonReminder,
       addGoodNews, editGoodNews, deleteGoodNews, setGoodNewsCategories,
+      addPeace, editPeace, deletePeace,
+      addHealth, editHealth, deleteHealth,
       setAutoRemind, setWebMode, openSheet, closeSheet, flash,
     }}>
       {children}

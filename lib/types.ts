@@ -66,6 +66,25 @@ export interface GoodNews {
   category?: string
 }
 
+export interface PeaceSession {
+  id: string
+  date: string
+  type: string        // Deep Breathing, Meditation, Quiet Reflection, …
+  minutes: number
+  mood?: string       // how you felt after — Calm, Grounded, …
+  notes?: string
+}
+
+export interface HealthActivity {
+  id: string
+  date: string
+  type: string        // Run, Walk, Cycle, Strength, …
+  minutes: number
+  distance?: number   // km, for distance-based activities
+  calories?: number
+  notes?: string
+}
+
 export type SheetType =
   | { type: 'quick' }
   | { type: 'reminder' }
@@ -83,4 +102,8 @@ export type SheetType =
   | { type: 'add-good-news' }
   | { type: 'edit-good-news'; id: string }
   | { type: 'good-news-admin' }
+  | { type: 'add-peace'; peaceType?: string }
+  | { type: 'edit-peace'; id: string }
+  | { type: 'add-health'; healthType?: string }
+  | { type: 'edit-health'; id: string }
   | { type: 'info'; message: string }

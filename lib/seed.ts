@@ -40,6 +40,39 @@ export const SEED_PEOPLE: Person[] = [
 
 export const DEFAULT_GOOD_NEWS_CATEGORIES = ['Work', 'Finance', 'Family', 'Friendship', 'Health', 'Soul']
 
+// ── Peacefulness ────────────────────────────────────────
+// Activities/practices used to find calm. Each has a glyph and a gradient.
+export const PEACE_ACTIVITIES = [
+  { type: 'Deep Breathing',   glyph: '🌬️', from: '#3FA9F5', to: '#5BD0E8' },
+  { type: 'Meditation',       glyph: '🧘', from: '#7C6BFF', to: '#A98BFF' },
+  { type: 'Quiet Reflection', glyph: '🤍', from: '#9B6BFF', to: '#C6A2FF' },
+  { type: 'Gratitude',        glyph: '🙏', from: '#E0A93B', to: '#FFCB6B' },
+  { type: 'Prayer',           glyph: '🕊️', from: '#6B8AFF', to: '#8FA9FF' },
+  { type: 'Nature Time',      glyph: '🌳', from: '#4FB477', to: '#7FD89B' },
+  { type: 'Journaling',       glyph: '📓', from: '#5B8DEF', to: '#9B6BFF' },
+  { type: 'Mindful Walk',     glyph: '🚶', from: '#3FA9F5', to: '#7FD89B' },
+  { type: 'Gentle Stretch',   glyph: '🤸', from: '#FF6BC1', to: '#FFA1D6' },
+  { type: 'Yoga Nidra',       glyph: '🌙', from: '#7C6BFF', to: '#5B8DEF' },
+] as const
+
+// How you can feel after a peacefulness session
+export const PEACE_MOODS = ['Calm', 'Grounded', 'Refreshed', 'Clearer', 'Still', 'Lighter'] as const
+
+// ── Health ──────────────────────────────────────────────
+// Workout/activity types. `dist: true` shows a distance field (MapMyRun-style).
+export const HEALTH_ACTIVITIES = [
+  { type: 'Run',      glyph: '🏃', from: '#E0716B', to: '#FF9D4D', dist: true  },
+  { type: 'Walk',     glyph: '🚶', from: '#4FB477', to: '#7FD89B', dist: true  },
+  { type: 'Cycle',    glyph: '🚴', from: '#3FA9F5', to: '#5BD0E8', dist: true  },
+  { type: 'Swim',     glyph: '🏊', from: '#5B8DEF', to: '#3FA9F5', dist: true  },
+  { type: 'Hike',     glyph: '🥾', from: '#E0A93B', to: '#FFCB6B', dist: true  },
+  { type: 'Row',      glyph: '🚣', from: '#5BD0E8', to: '#7FD89B', dist: true  },
+  { type: 'Strength', glyph: '🏋️', from: '#9B6BFF', to: '#C6A2FF', dist: false },
+  { type: 'Yoga',     glyph: '🧘', from: '#7C6BFF', to: '#A98BFF', dist: false },
+  { type: 'HIIT',     glyph: '🔥', from: '#E0716B', to: '#FF6B6B', dist: false },
+  { type: 'Sport',    glyph: '⚽', from: '#4FB477', to: '#5B8DEF', dist: false },
+] as const
+
 // Stable palette for good-news category chips, assigned by index
 export const GOOD_NEWS_PALETTE = ['#5B8DEF', '#E0A93B', '#FF6BC1', '#4FB477', '#E0716B', '#9B6BFF', '#3FA9F5', '#7FD89B']
 

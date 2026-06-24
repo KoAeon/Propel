@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getAuthUser, getSupabaseServer, habitToDb, reminderToDb, taskToDb, projectToDb, personToDb, goodNewsToDb } from '@/lib/db'
+import { getAuthUser, getSupabaseServer, habitToDb, reminderToDb, taskToDb, projectToDb, personToDb, goodNewsToDb, peaceToDb, healthToDb } from '@/lib/db'
 
 export async function POST(req: NextRequest) {
   const userId = await getAuthUser()
@@ -15,6 +15,8 @@ export async function POST(req: NextRequest) {
     data.tasks?.length && sb.from('tasks').upsert(data.tasks.map((t: Parameters<typeof taskToDb>[0]) => taskToDb(t, userId))),
     data.people?.length && sb.from('people').upsert(data.people.map((p: Parameters<typeof personToDb>[0]) => personToDb(p, userId))),
     data.goodNews?.length && sb.from('good_news').upsert(data.goodNews.map((g: Parameters<typeof goodNewsToDb>[0]) => goodNewsToDb(g, userId))),
+    data.peace?.length && sb.from('peace_sessions').upsert(data.peace.map((p: Parameters<typeof peaceToDb>[0]) => peaceToDb(p, userId))),
+    data.health?.length && sb.from('health_activities').upsert(data.health.map((h: Parameters<typeof healthToDb>[0]) => healthToDb(h, userId))),
     sb.from('user_settings').upsert({ user_id: userId, auto_remind: data.autoRemind ?? true, web_mode: data.webMode ?? false, good_news_categories: data.goodNewsCategories ?? null }),
   ])
 

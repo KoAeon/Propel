@@ -1,7 +1,7 @@
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { getSupabaseServer } from '@/lib/supabase'
-import type { Habit, Reminder, Task, Project, GoodNews } from '@/lib/types'
+import type { Habit, Reminder, Task, Project, GoodNews, PeaceSession, HealthActivity } from '@/lib/types'
 import type { Person } from '@/lib/people'
 
 export async function getAuthUser() {
@@ -51,15 +51,31 @@ export function goodNewsFromDb(row: Record<string, unknown>): GoodNews {
   return { id: row.id as string, date: row.date as string, title: row.title as string, notes: row.notes as string | undefined, category: row.category as string | undefined }
 }
 
+export function peaceToDb(p: PeaceSession, userId: string) {
+  return { id: p.id, user_id: userId, date: p.date ?? null, type: p.type, minutes: p.minutes, mood: p.mood ?? null, notes: p.notes ?? null }
+}
+export function peaceFromDb(row: Record<string, unknown>): PeaceSession {
+  return { id: row.id as string, date: row.date as string, type: row.type as string, minutes: (row.minutes ?? 0) as number, mood: row.mood as string | undefined, notes: row.notes as string | undefined }
+}
+
+export function healthToDb(h: HealthActivity, userId: string) {
+  return { id: h.id, user_id: userId, date: h.date ?? null, type: h.type, minutes: h.minutes, distance: h.distance ?? null, calories: h.calories ?? null, notes: h.notes ?? null }
+}
+export function healthFromDb(row: Record<string, unknown>): HealthActivity {
+  return { id: row.id as string, date: row.date as string, type: row.type as string, minutes: (row.minutes ?? 0) as number, distance: row.distance == null ? undefined : Number(row.distance), calories: row.calories == null ? undefined : Number(row.calories), notes: row.notes as string | undefined }
+}
+
 export async function loadAllData(userId: string) {
   const sb = getSupabaseServer()
-  const [habits, reminders, projects, tasks, people, goodNews, settings] = await Promise.all([
+  const [habits, reminders, projects, tasks, people, goodNews, peace, health, settings] = await Promise.all([
     sb.from('habits').select('*').eq('user_id', userId).order('created_at'),
     sb.from('reminders').select('*').eq('user_id', userId).order('days'),
     sb.from('projects').select('*').eq('user_id', userId).order('created_at'),
     sb.from('tasks').select('*').eq('user_id', userId).order('created_at'),
     sb.from('people').select('*').eq('user_id', userId).order('name'),
     sb.from('good_news').select('*').eq('user_id', userId).order('date', { ascending: false }),
+    sb.from('peace_sessions').select('*').eq('user_id', userId).order('date', { ascending: false }),
+    sb.from('health_activities').select('*').eq('user_id', userId).order('date', { ascending: false }),
     sb.from('user_settings').select('*').eq('user_id', userId).single(),
   ])
   return {
@@ -69,6 +85,8 @@ export async function loadAllData(userId: string) {
     tasks: (tasks.data ?? []).map(taskFromDb),
     people: (people.data ?? []).map(personFromDb),
     goodNews: (goodNews.data ?? []).map(goodNewsFromDb),
+    peace: (peace.data ?? []).map(peaceFromDb),
+    health: (health.data ?? []).map(healthFromDb),
     autoRemind: (settings.data?.auto_remind ?? true) as boolean,
     webMode: (settings.data?.web_mode ?? false) as boolean,
     goodNewsCategories: (settings.data?.good_news_categories ?? null) as string[] | null,
